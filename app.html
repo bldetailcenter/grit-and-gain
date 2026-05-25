@@ -1042,6 +1042,8 @@
     document.getElementById('session-circuit-rows').innerHTML = '';
     document.getElementById('session-modal-title').textContent = sessionId ? 'Editar sesión' : 'Nueva sesión';
     document.getElementById('sess-name').value = '';
+    if (allExercises.length === 0) await loadExercises();
+    if (allCircuits.length === 0) await loadCircuits();
 
     document.getElementById('session-modal').classList.add('open');
     await new Promise(r => setTimeout(r, 50));
