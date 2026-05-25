@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grit & Gain</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --blue: #1a56db;
+      --blue-dark: #1341b0;
+      --blue-light: #e8f0fe;
+      --gray: #6b7280;
+      --gray-light: #f3f4f6;
+      --white: #ffffff;
+      --error: #dc2626;
+      --success: #16a34a;
+      --border: #e5e7eb;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--white);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .logo h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      letter-spacing: 2px;
+      color: var(--black);
+      line-height: 1;
+    }
+
+    .logo h1 span {
+      color: var(--blue);
+    }
+
+    .logo p {
+      font-size: 13px;
+      color: var(--gray);
+      margin-top: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+    }
+
+    .tabs {
+      display: flex;
+      background: var(--gray-light);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: var(--white);
+      color: var(--black);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--black);
+      margin-bottom: 7px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--black);
+      background: var(--white);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+    }
+
+    input::placeholder {
+      color: #c0c4cc;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 8px;
+    }
+
+    .btn:hover { background: var(--blue-dark); }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { background: #93aee8; cursor: not-allowed; }
+
+    .message {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .message.error {
+      background: #fef2f2;
+      color: var(--error);
+      border: 1px solid #fecaca;
+      display: block;
+    }
+
+    .message.success {
+      background: #f0fdf4;
+      color: var(--success);
+      border: 1px solid #bbf7d0;
+      display: block;
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="logo">
+    <h1>GRIT<span>&</span>GAIN</h1>
+    <p>Registra tu progreso. Supera tus límites.</p>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Iniciar sesión</button>
+      <button class="tab" onclick="switchTab('register')">Registrarse</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="panel active" id="panel-login">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="login-password" placeholder="••••••••">
+      </div>
+      <button class="btn" onclick="login()">Entrar</button>
+      <div class="message" id="login-msg"></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="panel" id="panel-register">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label>Repetir contraseña</label>
+        <input type="password" id="reg-password2" placeholder="••••••••">
+      </div>
+      <button class="btn" onclick="register()">Crear cuenta</button>
+      <div class="message" id="reg-msg"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://flpspzckvqmioiruyuei.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZscHNwemNrdnFtaW9pcnV5dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjYwNTYsImV4cCI6MjA5NTMwMjA1Nn0.JU4k-YAzJ03ACbMHJib8sLALQCvJXq1no7-m045prMs';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Redirigir si ya hay sesión
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) window.location.href = 'app.html';
+  });
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+    });
+    document.getElementById('panel-login').classList.toggle('active', tab === 'login');
+    document.getElementById('panel-register').classList.toggle('active', tab === 'register');
+  }
+
+  function showMsg(id, text, type) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'message ' + type;
+  }
+
+  async function login() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) return showMsg('login-msg', 'Rellena todos los campos.', 'error');
+
+    const btn = document.querySelector('#panel-login .btn');
+    btn.disabled = true; btn.textContent = 'Entrando...';
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      showMsg('login-msg', 'Email o contraseña incorrectos.', 'error');
+      btn.disabled = false; btn.textContent = 'Entrar';
+    } else {
+      window.location.href = 'app.html';
+    }
+  }
+
+  async function register() {
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const password2 = document.getElementById('reg-password2').value;
+
+    if (!email || !password || !password2) return showMsg('reg-msg', 'Rellena todos los campos.', 'error');
+    if (password !== password2) return showMsg('reg-msg', 'Las contraseñas no coinciden.', 'error');
+    if (password.length < 6) return showMsg('reg-msg', 'La contraseña debe tener al menos 6 caracteres.', 'error');
+
+    const btn = document.querySelector('#panel-register .btn');
+    btn.disabled = true; btn.textContent = 'Creando cuenta...';
+
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      showMsg('reg-msg', 'Error al crear la cuenta: ' + error.message, 'error');
+      btn.disabled = false; btn.textContent = 'Crear cuenta';
+    } else {
+      showMsg('reg-msg', 'Cuenta creada. Revisa tu email para confirmarla.', 'success');
+      btn.disabled = false; btn.textContent = 'Crear cuenta';
+    }
+  }
+
+  // Enter para enviar
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (document.getElementById('panel-login').classList.contains('active')) login();
+      else register();
+    }
+  });
+</script>
+</body>
+</html>
