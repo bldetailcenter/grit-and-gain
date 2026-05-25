@@ -629,7 +629,7 @@
     event.currentTarget.classList.add('active');
     if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
     if (page === 'circuits') loadCircuits();
-    if (page === 'routines') loadRoutines();
+    if (page === 'routines') { loadExercises(); loadCircuits(); loadRoutines(); }
   }
 
   function toggleSidebar() {
