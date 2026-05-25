@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grit & Gain</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --blue: #1a56db;
+      --blue-dark: #1341b0;
+      --blue-light: #e8f0fe;
+      --gray: #6b7280;
+      --gray-light: #f3f4f6;
+      --white: #ffffff;
+      --error: #dc2626;
+      --success: #16a34a;
+      --border: #e5e7eb;
+      --sidebar-w: 220px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--gray-light);
+      color: var(--black);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--white);
+      border-right: 1.5px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1.5px solid var(--border);
+    }
+
+    .sidebar-logo h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 1px;
+      color: var(--black);
+    }
+
+    .sidebar-logo h1 span { color: var(--blue); }
+
+    .sidebar-logo p {
+      font-size: 11px;
+      color: var(--gray);
+      margin-top: 2px;
+    }
+
+    nav { flex: 1; padding: 16px 12px; }
+
+    .nav-section {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--gray);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 0 8px;
+      margin: 16px 0 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray);
+      transition: all 0.15s;
+      margin-bottom: 2px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover { background: var(--gray-light); color: var(--black); }
+    .nav-item.active { background: var(--blue-light); color: var(--blue); }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 16px 12px;
+      border-top: 1.5px solid var(--border);
+    }
+
+    .user-info {
+      font-size: 12px;
+      color: var(--gray);
+      margin-bottom: 10px;
+      padding: 0 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-logout {
+      width: 100%;
+      padding: 9px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--gray);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-logout:hover { border-color: var(--error); color: var(--error); }
+
+    /* MAIN */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 32px;
+      min-height: 100vh;
+    }
+
+    .page { display: none; animation: fadeIn 0.3s ease; }
+    .page.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      letter-spacing: 1px;
+      color: var(--black);
+    }
+
+    /* BOTONES */
+    .btn-primary {
+      padding: 10px 20px;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover { background: var(--blue-dark); }
+
+    .btn-secondary {
+      padding: 8px 16px;
+      background: none;
+      color: var(--gray);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary:hover { border-color: var(--blue); color: var(--blue); }
+
+    .btn-danger {
+      padding: 6px 12px;
+      background: none;
+      color: var(--error);
+      border: 1.5px solid #fecaca;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-danger:hover { background: #fef2f2; }
+
+    .btn-edit {
+      padding: 6px 12px;
+      background: none;
+      color: var(--blue);
+      border: 1.5px solid #bfdbfe;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-edit:hover { background: var(--blue-light); }
+
+    /* CARDS */
+    .card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 12px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--black);
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--gray);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      animation: fadeUp 0.25s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--black);
+      margin-bottom: 6px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--black);
+      background: var(--white);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus { border-color: var(--blue); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      justify-content: flex-end;
+    }
+
+    /* EMPTY STATE */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--gray);
+    }
+
+    .empty .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty p { font-size: 15px; }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--black);
+      color: var(--white);
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--error); }
+
+    /* SEARCH */
+    .search-bar {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .search-bar input {
+      padding-left: 36px;
+    }
+
+    .search-bar .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 15px;
+    }
+
+    /* MOBILE */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 300;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+      }
+
+      .sidebar.open { transform: translateX(0); }
+      .hamburger { display: block; }
+
+      .main {
+        margin-left: 0;
+        padding: 20px 16px;
+        padding-top: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<button class="hamburger" onclick="toggleSidebar()">☰</button>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <h1>GRIT<span>&</span>GAIN</h1>
+    <p>Tu progreso, tu historia.</p>
+  </div>
+  <nav>
+    <div class="nav-section">Principal</div>
+    <button class="nav-item active" onclick="navigate('exercises')">
+      <span class="icon">💪</span> Ejercicios
+    </button>
+    <button class="nav-item" onclick="navigate('circuits')">
+      <span class="icon">🔄</span> Circuitos
+    </button>
+    <button class="nav-item" onclick="navigate('routines')">
+      <span class="icon">📋</span> Rutinas
+    </button>
+
+    <div class="nav-section">Entrenamiento</div>
+    <button class="nav-item" onclick="navigate('workout')">
+      <span class="icon">🏋️</span> Entrenar hoy
+    </button>
+    <button class="nav-item" onclick="navigate('history')">
+      <span class="icon">📅</span> Historial
+    </button>
+
+    <div class="nav-section">Progreso</div>
+    <button class="nav-item" onclick="navigate('stats')">
+      <span class="icon">📊</span> Estadísticas
+    </button>
+    <button class="nav-item" onclick="navigate('photos')">
+      <span class="icon">📸</span> Fotos
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info" id="user-email"></div>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- EJERCICIOS -->
+  <div class="page active" id="page-exercises">
+    <div class="page-header">
+      <h2 class="page-title">Ejercicios</h2>
+      <button class="btn-primary" onclick="openExerciseModal()">+ Nuevo ejercicio</button>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Buscar ejercicio..." oninput="filterExercises(this.value)">
+    </div>
+    <div id="exercises-list"></div>
+  </div>
+
+  <!-- OTRAS PÁGINAS (vacías por ahora) -->
+  <div class="page" id="page-circuits">
+    <div class="page-header"><h2 class="page-title">Circuitos</h2></div>
+    <div class="empty"><div class="empty-icon">🔄</div><p>Próximamente</p></div>
+  </div>
+  <div class="page" id="page-routines">
+    <div class="page-header"><h2 class="page-title">Rutinas</h2></div>
+    <div class="empty"><div class="empty-icon">📋</div><p>Próximamente</p></div>
+  </div>
+  <div class="page" id="page-workout">
+    <div class="page-header"><h2 class="page-title">Entrenar hoy</h2></div>
+    <div class="empty"><div class="empty-icon">🏋️</div><p>Próximamente</p></div>
+  </div>
+  <div class="page" id="page-history">
+    <div class="page-header"><h2 class="page-title">Historial</h2></div>
+    <div class="empty"><div class="empty-icon">📅</div><p>Próximamente</p></div>
+  </div>
+  <div class="page" id="page-stats">
+    <div class="page-header"><h2 class="page-title">Estadísticas</h2></div>
+    <div class="empty"><div class="empty-icon">📊</div><p>Próximamente</p></div>
+  </div>
+  <div class="page" id="page-photos">
+    <div class="page-header"><h2 class="page-title">Fotos de progreso</h2></div>
+    <div class="empty"><div class="empty-icon">📸</div><p>Próximamente</p></div>
+  </div>
+
+</main>
+
+<!-- MODAL EJERCICIO -->
+<div class="modal-overlay" id="exercise-modal">
+  <div class="modal">
+    <div class="modal-title" id="exercise-modal-title">Nuevo ejercicio</div>
+    <div class="form-group">
+      <label>Nombre *</label>
+      <input type="text" id="ex-name" placeholder="Ej: Press banca">
+    </div>
+    <div class="form-group">
+      <label>Descripción</label>
+      <textarea id="ex-desc" placeholder="Descripción del ejercicio..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="ex-notes" placeholder="Notas personales, tips..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeExerciseModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveExercise()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://flpspzckvqmioiruyuei.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZscHNwemNrdnFtaW9pcnV5dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjYwNTYsImV4cCI6MjA5NTMwMjA1Nn0.JU4k-YAzJ03ACbMHJib8sLALQCvJXq1no7-m045prMs';
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+  let allExercises = [];
+  let editingExerciseId = null;
+
+  // INIT
+  async function init() {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+    currentUser = session.user;
+    document.getElementById('user-email').textContent = currentUser.email;
+    loadExercises();
+  }
+
+  // NAVEGACIÓN
+  function navigate(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  // LOGOUT
+  async function logout() {
+    await db.auth.signOut();
+    window.location.href = 'index.html';
+  }
+
+  // TOAST
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.className = 'toast', 2800);
+  }
+
+  // ── EJERCICIOS ──
+
+  async function loadExercises() {
+    const { data, error } = await db
+      .from('exercises')
+      .select('*')
+      .order('name');
+    if (error) { showToast('Error al cargar ejercicios', 'error'); return; }
+    allExercises = data || [];
+    renderExercises(allExercises);
+  }
+
+  function renderExercises(list) {
+    const container = document.getElementById('exercises-list');
+    if (list.length === 0) {
+      container.innerHTML = `<div class="empty"><div class="empty-icon">💪</div><p>No hay ejercicios aún. ¡Crea el primero!</p></div>`;
+      return;
+    }
+    container.innerHTML = list.map(ex => `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">${escapeHtml(ex.name)}</div>
+            ${ex.description ? `<div class="card-desc">${escapeHtml(ex.description)}</div>` : ''}
+            ${ex.notes ? `<div class="card-desc" style="margin-top:6px;color:#1a56db">📝 ${escapeHtml(ex.notes)}</div>` : ''}
+          </div>
+          <div class="card-actions">
+            <button class="btn-edit" onclick="editExercise('${ex.id}')">Editar</button>
+            <button class="btn-danger" onclick="deleteExercise('${ex.id}')">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function filterExercises(query) {
+    const q = query.toLowerCase();
+    renderExercises(allExercises.filter(ex => ex.name.toLowerCase().includes(q)));
+  }
+
+  function openExerciseModal(id = null) {
+    editingExerciseId = id;
+    document.getElementById('exercise-modal-title').textContent = id ? 'Editar ejercicio' : 'Nuevo ejercicio';
+    if (id) {
+      const ex = allExercises.find(e => e.id === id);
+      document.getElementById('ex-name').value = ex.name || '';
+      document.getElementById('ex-desc').value = ex.description || '';
+      document.getElementById('ex-notes').value = ex.notes || '';
+    } else {
+      document.getElementById('ex-name').value = '';
+      document.getElementById('ex-desc').value = '';
+      document.getElementById('ex-notes').value = '';
+    }
+    document.getElementById('exercise-modal').classList.add('open');
+    setTimeout(() => document.getElementById('ex-name').focus(), 100);
+  }
+
+  function closeExerciseModal() {
+    document.getElementById('exercise-modal').classList.remove('open');
+    editingExerciseId = null;
+  }
+
+  function editExercise(id) { openExerciseModal(id); }
+
+  async function saveExercise() {
+    const name = document.getElementById('ex-name').value.trim();
+    if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+    const payload = {
+      name,
+      description: document.getElementById('ex-desc').value.trim() || null,
+      notes: document.getElementById('ex-notes').value.trim() || null,
+      user_id: currentUser.id
+    };
+
+    let error;
+    if (editingExerciseId) {
+      ({ error } = await db.from('exercises').update(payload).eq('id', editingExerciseId));
+    } else {
+      ({ error } = await db.from('exercises').insert(payload));
+    }
+
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    showToast(editingExerciseId ? 'Ejercicio actualizado' : 'Ejercicio creado');
+    closeExerciseModal();
+    loadExercises();
+  }
+
+  async function deleteExercise(id) {
+    if (!confirm('¿Eliminar este ejercicio?')) return;
+    const { error } = await db.from('exercises').delete().eq('id', id);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Ejercicio eliminado');
+    loadExercises();
+  }
+
+  // Cerrar modal al hacer clic fuera
+  document.getElementById('exercise-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeExerciseModal();
+  });
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  init();
+</script>
+</body>
+</html>
