@@ -466,8 +466,15 @@
     <div id="circuits-list"></div>
   </div>
   <div class="page" id="page-routines">
-    <div class="page-header"><h2 class="page-title">Rutinas</h2></div>
-    <div class="empty"><div class="empty-icon">📋</div><p>Próximamente</p></div>
+    <div class="page-header">
+      <h2 class="page-title">Rutinas</h2>
+      <button class="btn-primary" onclick="openRoutineModal()">+ Nueva rutina</button>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Buscar rutina..." oninput="filterRoutines(this.value)">
+    </div>
+    <div id="routines-list"></div>
   </div>
   <div class="page" id="page-workout">
     <div class="page-header"><h2 class="page-title">Entrenar hoy</h2></div>
@@ -507,6 +514,49 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeExerciseModal()">Cancelar</button>
       <button class="btn-primary" onclick="saveExercise()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RUTINA -->
+<div class="modal-overlay" id="routine-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title" id="routine-modal-title">Nueva rutina</div>
+    <div class="form-group">
+      <label>Nombre *</label>
+      <input type="text" id="rout-name" placeholder="Ej: Fuerza 4 días">
+    </div>
+    <div class="form-group">
+      <label>Descripción</label>
+      <textarea id="rout-desc" placeholder="Descripción de la rutina..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRoutineModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveRoutine()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SESIÓN -->
+<div class="modal-overlay" id="session-modal">
+  <div class="modal" style="max-width:620px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title" id="session-modal-title">Nueva sesión</div>
+    <div class="form-group">
+      <label>Nombre de la sesión *</label>
+      <input type="text" id="sess-name" placeholder="Ej: Día A - Pecho y tríceps">
+    </div>
+
+    <div style="margin:16px 0 10px;font-size:14px;font-weight:600;color:var(--black)">Ejercicios</div>
+    <div id="session-exercise-rows"></div>
+    <button class="btn-secondary" style="width:100%;margin-bottom:16px" onclick="addSessionExerciseRow()">+ Añadir ejercicio</button>
+
+    <div style="margin:4px 0 10px;font-size:14px;font-weight:600;color:var(--black)">Circuitos</div>
+    <div id="session-circuit-rows"></div>
+    <button class="btn-secondary" style="width:100%;margin-bottom:8px" onclick="addSessionCircuitRow()">+ Añadir circuito</button>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeSessionModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveSession()">Guardar sesión</button>
     </div>
   </div>
 </div>
@@ -579,6 +629,7 @@
     event.currentTarget.classList.add('active');
     if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
     if (page === 'circuits') loadCircuits();
+    if (page === 'routines') loadRoutines();
   }
 
   function toggleSidebar() {
@@ -876,6 +927,240 @@
 
   document.getElementById('circuit-modal').addEventListener('click', function(e) {
     if (e.target === this) closeCircuitModal();
+  });
+
+  // ── RUTINAS ──
+
+  let allRoutines = [];
+  let editingRoutineId = null;
+  let currentRoutineId = null;
+  let editingSessionId = null;
+  let sessionExRows = [];
+  let sessionCircRows = [];
+
+  async function loadRoutines() {
+    const { data, error } = await db
+      .from('routines')
+      .select('*, routine_sessions(id, name, order_index)')
+      .order('name');
+    if (error) { showToast('Error al cargar rutinas', 'error'); return; }
+    allRoutines = data || [];
+    renderRoutines(allRoutines);
+  }
+
+  function renderRoutines(list) {
+    const container = document.getElementById('routines-list');
+    if (list.length === 0) {
+      container.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>No hay rutinas aún. ¡Crea la primera!</p></div>`;
+      return;
+    }
+    container.innerHTML = list.map(r => {
+      const sessions = (r.routine_sessions || []).sort((a,b) => a.order_index - b.order_index);
+      const sessHtml = sessions.map(s => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--gray-light);border-radius:8px;margin-bottom:6px">
+          <span style="font-size:13px;font-weight:500">${escapeHtml(s.name)}</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn-edit" style="font-size:11px;padding:4px 10px" onclick="editSession('${s.id}','${r.id}')">Editar</button>
+            <button class="btn-danger" style="font-size:11px;padding:4px 10px" onclick="deleteSession('${s.id}')">Eliminar</button>
+          </div>
+        </div>`).join('');
+      return `
+        <div class="card">
+          <div class="card-header" style="margin-bottom:${sessions.length ? '14px' : '0'}">
+            <div>
+              <div class="card-title">${escapeHtml(r.name)}</div>
+              ${r.description ? `<div class="card-desc">${escapeHtml(r.description)}</div>` : ''}
+            </div>
+            <div class="card-actions">
+              <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="openSessionModal(null,'${r.id}')">+ Sesión</button>
+              <button class="btn-edit" onclick="editRoutine('${r.id}')">Editar</button>
+              <button class="btn-danger" onclick="deleteRoutine('${r.id}')">Eliminar</button>
+            </div>
+          </div>
+          ${sessHtml}
+        </div>`;
+    }).join('');
+  }
+
+  function filterRoutines(q) {
+    renderRoutines(allRoutines.filter(r => r.name.toLowerCase().includes(q.toLowerCase())));
+  }
+
+  function openRoutineModal(id = null) {
+    editingRoutineId = id;
+    document.getElementById('routine-modal-title').textContent = id ? 'Editar rutina' : 'Nueva rutina';
+    if (id) {
+      const r = allRoutines.find(x => x.id === id);
+      document.getElementById('rout-name').value = r.name || '';
+      document.getElementById('rout-desc').value = r.description || '';
+    } else {
+      document.getElementById('rout-name').value = '';
+      document.getElementById('rout-desc').value = '';
+    }
+    document.getElementById('routine-modal').classList.add('open');
+  }
+
+  function closeRoutineModal() {
+    document.getElementById('routine-modal').classList.remove('open');
+    editingRoutineId = null;
+  }
+
+  function editRoutine(id) { openRoutineModal(id); }
+
+  async function saveRoutine() {
+    const name = document.getElementById('rout-name').value.trim();
+    if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+    const payload = { name, description: document.getElementById('rout-desc').value.trim() || null, user_id: currentUser.id };
+    let error;
+    if (editingRoutineId) {
+      ({ error } = await db.from('routines').update(payload).eq('id', editingRoutineId));
+    } else {
+      ({ error } = await db.from('routines').insert(payload));
+    }
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    showToast(editingRoutineId ? 'Rutina actualizada' : 'Rutina creada');
+    closeRoutineModal();
+    loadRoutines();
+  }
+
+  async function deleteRoutine(id) {
+    if (!confirm('¿Eliminar esta rutina y todas sus sesiones?')) return;
+    const { error } = await db.from('routines').delete().eq('id', id);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Rutina eliminada');
+    loadRoutines();
+  }
+
+  // ── SESIONES ──
+
+  async function openSessionModal(sessionId = null, routineId = null) {
+    editingSessionId = sessionId;
+    currentRoutineId = routineId;
+    sessionExRows = [];
+    sessionCircRows = [];
+    document.getElementById('session-exercise-rows').innerHTML = '';
+    document.getElementById('session-circuit-rows').innerHTML = '';
+    document.getElementById('session-modal-title').textContent = sessionId ? 'Editar sesión' : 'Nueva sesión';
+    document.getElementById('sess-name').value = '';
+
+    if (sessionId) {
+      const { data: sess } = await db.from('routine_sessions').select('*').eq('id', sessionId).single();
+      document.getElementById('sess-name').value = sess?.name || '';
+      const { data: exs } = await db.from('routine_session_exercises')
+        .select('*').eq('session_id', sessionId).order('order_index');
+      (exs || []).forEach(e => addSessionExerciseRow(e.exercise_id, e.sets, e.reps, e.suggested_weight));
+      const { data: circs } = await db.from('routine_session_circuits')
+        .select('*').eq('session_id', sessionId).order('order_index');
+      (circs || []).forEach(c => addSessionCircuitRow(c.circuit_id));
+    } else {
+      addSessionExerciseRow();
+    }
+    document.getElementById('session-modal').classList.add('open');
+  }
+
+  function closeSessionModal() {
+    document.getElementById('session-modal').classList.remove('open');
+    editingSessionId = null;
+  }
+
+  async function editSession(sessionId, routineId) { await openSessionModal(sessionId, routineId); }
+
+  function addSessionExerciseRow(exerciseId='', sets='', reps='', weight='') {
+    const rowId = 'ser-' + Date.now() + Math.random();
+    sessionExRows.push(rowId);
+    const opts = allExercises.map(e =>
+      `<option value="${e.id}" ${e.id === exerciseId ? 'selected' : ''}>${escapeHtml(e.name)}</option>`
+    ).join('');
+    const html = `
+      <div id="${rowId}" style="display:grid;grid-template-columns:1fr 60px 60px 80px 36px;gap:6px;margin-bottom:8px;align-items:center">
+        <select style="font-size:13px;padding:8px 10px"><option value="">-- Ejercicio --</option>${opts}</select>
+        <input type="number" placeholder="Series" value="${sets}" style="font-size:13px;padding:8px 6px;text-align:center" min="1">
+        <input type="number" placeholder="Reps" value="${reps}" style="font-size:13px;padding:8px 6px;text-align:center" min="1">
+        <input type="number" placeholder="Kg" value="${weight}" style="font-size:13px;padding:8px 6px;text-align:center" min="0" step="0.5">
+        <button onclick="removeRow('${rowId}')" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:16px;color:#dc2626;padding:4px">×</button>
+      </div>`;
+    document.getElementById('session-exercise-rows').insertAdjacentHTML('beforeend', html);
+  }
+
+  function addSessionCircuitRow(circuitId='') {
+    const rowId = 'scr-' + Date.now() + Math.random();
+    sessionCircRows.push(rowId);
+    const opts = allCircuits.map(c =>
+      `<option value="${c.id}" ${c.id === circuitId ? 'selected' : ''}>${escapeHtml(c.name)}</option>`
+    ).join('');
+    const html = `
+      <div id="${rowId}" style="display:grid;grid-template-columns:1fr 36px;gap:6px;margin-bottom:8px;align-items:center">
+        <select style="font-size:13px;padding:8px 10px"><option value="">-- Circuito --</option>${opts}</select>
+        <button onclick="removeRow('${rowId}')" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:16px;color:#dc2626;padding:4px">×</button>
+      </div>`;
+    document.getElementById('session-circuit-rows').insertAdjacentHTML('beforeend', html);
+  }
+
+  async function saveSession() {
+    const name = document.getElementById('sess-name').value.trim();
+    if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+
+    let sessionId = editingSessionId;
+    if (editingSessionId) {
+      await db.from('routine_sessions').update({ name }).eq('id', editingSessionId);
+      await db.from('routine_session_exercises').delete().eq('session_id', editingSessionId);
+      await db.from('routine_session_circuits').delete().eq('session_id', editingSessionId);
+    } else {
+      const { data: existing } = await db.from('routine_sessions').select('id').eq('routine_id', currentRoutineId);
+      const orderIndex = (existing || []).length;
+      const { data, error } = await db.from('routine_sessions')
+        .insert({ routine_id: currentRoutineId, name, order_index: orderIndex })
+        .select().single();
+      if (error) { showToast('Error al guardar', 'error'); return; }
+      sessionId = data.id;
+    }
+
+    // Guardar ejercicios de la sesión
+    const exRows = document.getElementById('session-exercise-rows').querySelectorAll('[id^="ser-"]');
+    const exPayload = [];
+    exRows.forEach((row, i) => {
+      const sel = row.querySelector('select');
+      const inputs = row.querySelectorAll('input');
+      if (!sel?.value) return;
+      exPayload.push({
+        session_id: sessionId,
+        exercise_id: sel.value,
+        sets: parseInt(inputs[0]?.value) || null,
+        reps: parseInt(inputs[1]?.value) || null,
+        suggested_weight: parseFloat(inputs[2]?.value) || null,
+        order_index: i
+      });
+    });
+    if (exPayload.length > 0) await db.from('routine_session_exercises').insert(exPayload);
+
+    // Guardar circuitos de la sesión
+    const circRows = document.getElementById('session-circuit-rows').querySelectorAll('[id^="scr-"]');
+    const circPayload = [];
+    circRows.forEach((row, i) => {
+      const sel = row.querySelector('select');
+      if (!sel?.value) return;
+      circPayload.push({ session_id: sessionId, circuit_id: sel.value, order_index: i });
+    });
+    if (circPayload.length > 0) await db.from('routine_session_circuits').insert(circPayload);
+
+    showToast(editingSessionId ? 'Sesión actualizada' : 'Sesión creada');
+    closeSessionModal();
+    loadRoutines();
+  }
+
+  async function deleteSession(id) {
+    if (!confirm('¿Eliminar esta sesión?')) return;
+    const { error } = await db.from('routine_sessions').delete().eq('id', id);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Sesión eliminada');
+    loadRoutines();
+  }
+
+  document.getElementById('routine-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeRoutineModal();
+  });
+  document.getElementById('session-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeSessionModal();
   });
 
 </script>
