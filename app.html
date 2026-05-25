@@ -1043,6 +1043,8 @@
     document.getElementById('session-modal-title').textContent = sessionId ? 'Editar sesión' : 'Nueva sesión';
     document.getElementById('sess-name').value = '';
 
+    document.getElementById('session-modal').classList.add('open');
+    await new Promise(r => setTimeout(r, 50));
     if (sessionId) {
       const { data: sess } = await db.from('routine_sessions').select('*').eq('id', sessionId).single();
       document.getElementById('sess-name').value = sess?.name || '';
@@ -1055,7 +1057,6 @@
     } else {
       addSessionExerciseRow();
     }
-    document.getElementById('session-modal').classList.add('open');
   }
 
   function closeSessionModal() {
