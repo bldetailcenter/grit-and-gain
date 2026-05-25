@@ -453,10 +453,17 @@
     <div id="exercises-list"></div>
   </div>
 
-  <!-- OTRAS PÁGINAS (vacías por ahora) -->
+  <!-- OTRAS PÁGINAS -->
   <div class="page" id="page-circuits">
-    <div class="page-header"><h2 class="page-title">Circuitos</h2></div>
-    <div class="empty"><div class="empty-icon">🔄</div><p>Próximamente</p></div>
+    <div class="page-header">
+      <h2 class="page-title">Circuitos</h2>
+      <button class="btn-primary" onclick="openCircuitModal()">+ Nuevo circuito</button>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Buscar circuito..." oninput="filterCircuits(this.value)">
+    </div>
+    <div id="circuits-list"></div>
   </div>
   <div class="page" id="page-routines">
     <div class="page-header"><h2 class="page-title">Rutinas</h2></div>
@@ -504,6 +511,44 @@
   </div>
 </div>
 
+<!-- MODAL CIRCUITO -->
+<div class="modal-overlay" id="circuit-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title" id="circuit-modal-title">Nuevo circuito</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label>Nombre *</label>
+        <input type="text" id="circ-name" placeholder="Ej: Circuito quema">
+      </div>
+      <div class="form-group">
+        <label>Tipo *</label>
+        <select id="circ-type">
+          <option value="amrap">AMRAP</option>
+          <option value="tabata">Tabata</option>
+          <option value="emom">EMOM</option>
+          <option value="rondas">Rondas fijas</option>
+          <option value="libre">Libre</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="circ-notes" placeholder="Descripción, instrucciones..."></textarea>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <label style="margin:0;font-size:14px;font-weight:600">Ejercicios del circuito</label>
+        <button class="btn-secondary" onclick="addCircuitExerciseRow()">+ Añadir</button>
+      </div>
+      <div id="circuit-exercises-rows"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeCircuitModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveCircuit()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -533,6 +578,7 @@
     document.getElementById('page-' + page).classList.add('active');
     event.currentTarget.classList.add('active');
     if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+    if (page === 'circuits') loadCircuits();
   }
 
   function toggleSidebar() {
@@ -658,6 +704,180 @@
   }
 
   init();
+
+  // ── CIRCUITOS ──
+
+  let allCircuits = [];
+  let editingCircuitId = null;
+  let circuitExerciseRows = [];
+
+  async function loadCircuits() {
+    const { data, error } = await db
+      .from('circuits')
+      .select('*, circuit_exercises(*, exercises(name))')
+      .order('name');
+    if (error) { showToast('Error al cargar circuitos', 'error'); return; }
+    allCircuits = data || [];
+    renderCircuits(allCircuits);
+  }
+
+  const CIRCUIT_TYPE_LABELS = {
+    amrap: 'AMRAP', tabata: 'Tabata', emom: 'EMOM', rondas: 'Rondas fijas', libre: 'Libre'
+  };
+
+  const CIRCUIT_TYPE_COLORS = {
+    amrap: '#dc2626', tabata: '#7c3aed', emom: '#0891b2', rondas: '#16a34a', libre: '#6b7280'
+  };
+
+  function renderCircuits(list) {
+    const container = document.getElementById('circuits-list');
+    if (list.length === 0) {
+      container.innerHTML = `<div class="empty"><div class="empty-icon">🔄</div><p>No hay circuitos aún. ¡Crea el primero!</p></div>`;
+      return;
+    }
+    container.innerHTML = list.map(c => {
+      const exList = (c.circuit_exercises || [])
+        .sort((a,b) => a.order_index - b.order_index)
+        .map(ce => {
+          let detail = ce.exercises?.name || '';
+          if (ce.reps) detail += ` · ${ce.reps} reps`;
+          if (ce.suggested_weight) detail += ` · ${ce.suggested_weight}kg`;
+          return `<span style="display:inline-block;background:var(--gray-light);border-radius:4px;padding:2px 8px;font-size:12px;margin:2px">${escapeHtml(detail)}</span>`;
+        }).join('');
+      const typeColor = CIRCUIT_TYPE_COLORS[c.type] || '#6b7280';
+      const typeLabel = CIRCUIT_TYPE_LABELS[c.type] || c.type;
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+                <div class="card-title">${escapeHtml(c.name)}</div>
+                <span style="background:${typeColor};color:white;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px">${typeLabel}</span>
+              </div>
+              ${c.notes ? `<div class="card-desc">${escapeHtml(c.notes)}</div>` : ''}
+              ${exList ? `<div style="margin-top:8px">${exList}</div>` : ''}
+            </div>
+            <div class="card-actions">
+              <button class="btn-edit" onclick="editCircuit('${c.id}')">Editar</button>
+              <button class="btn-danger" onclick="deleteCircuit('${c.id}')">Eliminar</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function filterCircuits(query) {
+    const q = query.toLowerCase();
+    renderCircuits(allCircuits.filter(c => c.name.toLowerCase().includes(q)));
+  }
+
+  function openCircuitModal(id = null) {
+    editingCircuitId = id;
+    circuitExerciseRows = [];
+    document.getElementById('circuit-modal-title').textContent = id ? 'Editar circuito' : 'Nuevo circuito';
+    document.getElementById('circuit-exercises-rows').innerHTML = '';
+
+    if (id) {
+      const c = allCircuits.find(x => x.id === id);
+      document.getElementById('circ-name').value = c.name || '';
+      document.getElementById('circ-type').value = c.type || 'amrap';
+      document.getElementById('circ-notes').value = c.notes || '';
+      const exs = (c.circuit_exercises || []).sort((a,b) => a.order_index - b.order_index);
+      exs.forEach(ce => addCircuitExerciseRow(ce.exercise_id, ce.reps, ce.suggested_weight));
+    } else {
+      document.getElementById('circ-name').value = '';
+      document.getElementById('circ-type').value = 'amrap';
+      document.getElementById('circ-notes').value = '';
+      addCircuitExerciseRow();
+    }
+    document.getElementById('circuit-modal').classList.add('open');
+  }
+
+  function closeCircuitModal() {
+    document.getElementById('circuit-modal').classList.remove('open');
+    editingCircuitId = null;
+  }
+
+  function addCircuitExerciseRow(exerciseId = '', reps = '', weight = '') {
+    const rowId = 'cer-' + Date.now() + Math.random();
+    circuitExerciseRows.push(rowId);
+    const opts = allExercises.map(e =>
+      `<option value="${e.id}" ${e.id === exerciseId ? 'selected' : ''}>${escapeHtml(e.name)}</option>`
+    ).join('');
+    const html = `
+      <div id="${rowId}" style="display:grid;grid-template-columns:1fr 80px 90px 36px;gap:8px;margin-bottom:8px;align-items:center">
+        <select style="font-size:13px;padding:8px 10px"><option value="">-- Ejercicio --</option>${opts}</select>
+        <input type="number" placeholder="Reps" value="${reps}" style="font-size:13px;padding:8px 10px" min="0">
+        <input type="number" placeholder="Kg" value="${weight}" style="font-size:13px;padding:8px 10px" min="0" step="0.5">
+        <button onclick="removeRow('${rowId}')" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:16px;color:#dc2626;padding:4px">×</button>
+      </div>`;
+    document.getElementById('circuit-exercises-rows').insertAdjacentHTML('beforeend', html);
+  }
+
+  function removeRow(rowId) {
+    document.getElementById(rowId)?.remove();
+    circuitExerciseRows = circuitExerciseRows.filter(r => r !== rowId);
+  }
+
+  async function saveCircuit() {
+    const name = document.getElementById('circ-name').value.trim();
+    const type = document.getElementById('circ-type').value;
+    if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+
+    const payload = { name, type, notes: document.getElementById('circ-notes').value.trim() || null, user_id: currentUser.id };
+
+    let circuitId = editingCircuitId;
+    if (editingCircuitId) {
+      const { error } = await db.from('circuits').update(payload).eq('id', editingCircuitId);
+      if (error) { showToast('Error al guardar', 'error'); return; }
+      await db.from('circuit_exercises').delete().eq('circuit_id', editingCircuitId);
+    } else {
+      const { data, error } = await db.from('circuits').insert(payload).select().single();
+      if (error) { showToast('Error al guardar', 'error'); return; }
+      circuitId = data.id;
+    }
+
+    // Guardar ejercicios del circuito
+    const rows = document.getElementById('circuit-exercises-rows').querySelectorAll('div[id^="cer-"]');
+    const exPayload = [];
+    rows.forEach((row, i) => {
+      const sel = row.querySelector('select');
+      const inputs = row.querySelectorAll('input');
+      const exId = sel?.value;
+      if (!exId) return;
+      exPayload.push({
+        circuit_id: circuitId,
+        exercise_id: exId,
+        reps: parseInt(inputs[0]?.value) || null,
+        suggested_weight: parseFloat(inputs[1]?.value) || null,
+        order_index: i
+      });
+    });
+
+    if (exPayload.length > 0) {
+      const { error } = await db.from('circuit_exercises').insert(exPayload);
+      if (error) { showToast('Error al guardar ejercicios', 'error'); return; }
+    }
+
+    showToast(editingCircuitId ? 'Circuito actualizado' : 'Circuito creado');
+    closeCircuitModal();
+    loadCircuits();
+  }
+
+  async function editCircuit(id) { openCircuitModal(id); }
+
+  async function deleteCircuit(id) {
+    if (!confirm('¿Eliminar este circuito?')) return;
+    const { error } = await db.from('circuits').delete().eq('id', id);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Circuito eliminado');
+    loadCircuits();
+  }
+
+  document.getElementById('circuit-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeCircuitModal();
+  });
+
 </script>
 </body>
 </html>
