@@ -231,10 +231,10 @@
 <script>
   const SUPABASE_URL = 'https://flpspzckvqmioiruyuei.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZscHNwemNrdnFtaW9pcnV5dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjYwNTYsImV4cCI6MjA5NTMwMjA1Nn0.JU4k-YAzJ03ACbMHJib8sLALQCvJXq1no7-m045prMs';
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // Redirigir si ya hay sesión
-  supabase.auth.getSession().then(({ data }) => {
+  db.auth.getSession().then(({ data }) => {
     if (data.session) window.location.href = 'app.html';
   });
 
@@ -260,7 +260,7 @@
     const btn = document.querySelector('#panel-login .btn');
     btn.disabled = true; btn.textContent = 'Entrando...';
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await db.auth.signInWithPassword({ email, password });
     if (error) {
       showMsg('login-msg', 'Email o contraseña incorrectos.', 'error');
       btn.disabled = false; btn.textContent = 'Entrar';
@@ -281,7 +281,7 @@
     const btn = document.querySelector('#panel-register .btn');
     btn.disabled = true; btn.textContent = 'Creando cuenta...';
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await db.auth.signUp({ email, password });
     if (error) {
       showMsg('reg-msg', 'Error al crear la cuenta: ' + error.message, 'error');
       btn.disabled = false; btn.textContent = 'Crear cuenta';
