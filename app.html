@@ -1016,6 +1016,228 @@
     if (e.target === this) closeCircuitModal();
   });
 
+  // ── ENTRENAMIENTO DIARIO ──
+
+  let workoutMode = null;
+  let workoutExercises = [];
+  let workoutCircuits = [];
+  let activeSessionId = null;
+
+  function initWorkoutPage() {
+    const today = new Date().toLocaleDateString('es-ES', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    document.getElementById('workout-date').textContent = today.charAt(0).toUpperCase() + today.slice(1);
+    workoutExercises = [];
+    workoutCircuits = [];
+    activeSessionId = null;
+    showWorkoutStep(1);
+    Promise.all([loadExercises(), loadCircuits(), loadRoutines()]).then(() => {
+      document.getElementById('wo-add-exercise-select').innerHTML =
+        '<option value="">-- Selecciona ejercicio --</option>' +
+        allExercises.map(e => `<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
+      document.getElementById('wo-add-circuit-select').innerHTML =
+        '<option value="">-- Selecciona circuito --</option>' +
+        allCircuits.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+      document.getElementById('wo-routine-select').innerHTML =
+        '<option value="">-- Selecciona rutina --</option>' +
+        allRoutines.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+    });
+  }
+
+  function showWorkoutStep(n) {
+    document.getElementById('workout-step1').style.display = n === 1 ? 'block' : 'none';
+    document.getElementById('workout-step2').style.display = n === 2 ? 'block' : 'none';
+    document.getElementById('workout-step3').style.display = n === 3 ? 'block' : 'none';
+  }
+
+  function startWorkout(mode) {
+    workoutMode = mode;
+    workoutExercises = [];
+    workoutCircuits = [];
+    activeSessionId = null;
+    if (mode === 'routine') {
+      showWorkoutStep(2);
+    } else {
+      document.getElementById('wo-session-name').textContent = 'Entrenamiento libre';
+      document.getElementById('wo-exercises-container').innerHTML = '';
+      document.getElementById('wo-notes').value = '';
+      showWorkoutStep(3);
+    }
+  }
+
+  function workoutBack() {
+    if (document.getElementById('workout-step3').style.display === 'block' && workoutMode === 'routine') {
+      showWorkoutStep(2);
+    } else {
+      showWorkoutStep(1);
+    }
+  }
+
+  function loadRoutineSessions() {
+    const routineId = document.getElementById('wo-routine-select').value;
+    const routine = allRoutines.find(r => r.id === routineId);
+    const sessions = (routine?.routine_sessions || []).sort((a,b) => a.order_index - b.order_index);
+    document.getElementById('wo-session-select').innerHTML =
+      '<option value="">-- Selecciona sesión --</option>' +
+      sessions.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  }
+
+  async function loadWorkoutSession() {
+    const sessionId = document.getElementById('wo-session-select').value;
+    if (!sessionId) { showToast('Selecciona una sesión', 'error'); return; }
+    activeSessionId = sessionId;
+    const { data: sess } = await db.from('routine_sessions').select('name').eq('id', sessionId).single();
+    document.getElementById('wo-session-name').textContent = sess?.name || '';
+    document.getElementById('wo-notes').value = '';
+    const { data: exs } = await db.from('routine_session_exercises')
+      .select('*, exercises(name)').eq('session_id', sessionId).order('order_index');
+    const { data: circs } = await db.from('routine_session_circuits')
+      .select('*, circuits(name, type, circuit_exercises(*, exercises(name)))').eq('session_id', sessionId).order('order_index');
+    workoutExercises = (exs || []).map(e => ({
+      exerciseId: e.exercise_id, name: e.exercises?.name || '',
+      suggested_sets: e.sets, suggested_reps: e.reps, suggested_weight: e.suggested_weight, sets: []
+    }));
+    workoutCircuits = (circs || []).map(c => ({
+      circuitId: c.circuit_id, name: c.circuits?.name || '', type: c.circuits?.type || '',
+      rounds: '', duration: '', notes: '', exerciseWeights: {}
+    }));
+    renderWorkoutExercises();
+    showWorkoutStep(3);
+  }
+
+  function renderWorkoutExercises() {
+    const container = document.getElementById('wo-exercises-container');
+    let html = '';
+    workoutExercises.forEach((ex, exIdx) => {
+      const hint = [];
+      if (ex.suggested_sets) hint.push(ex.suggested_sets + ' series');
+      if (ex.suggested_reps) hint.push(ex.suggested_reps + ' reps');
+      if (ex.suggested_weight) hint.push(ex.suggested_weight + 'kg');
+      const hintHtml = hint.length ? `<span style="font-size:12px;color:var(--blue);background:var(--blue-light);padding:2px 8px;border-radius:10px;margin-left:8px">📌 ${hint.join(' · ')}</span>` : '';
+      const setsHtml = ex.sets.map((s, sIdx) => `
+        <div style="display:grid;grid-template-columns:36px 80px 80px 1fr 30px;gap:8px;align-items:center;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:600;color:var(--gray);text-align:center">S${sIdx+1}</span>
+          <input type="number" placeholder="Reps" value="${s.reps||''}" min="0"
+            onchange="updateSet(${exIdx},${sIdx},'reps',this.value)" style="font-size:13px;padding:8px;text-align:center">
+          <input type="number" placeholder="Kg" value="${s.weight||''}" min="0" step="0.5"
+            onchange="updateSet(${exIdx},${sIdx},'weight',this.value)" style="font-size:13px;padding:8px;text-align:center">
+          <input type="text" placeholder="Notas" value="${s.notes||''}"
+            onchange="updateSet(${exIdx},${sIdx},'notes',this.value)" style="font-size:13px;padding:8px">
+          <button onclick="removeSet(${exIdx},${sIdx})" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:14px;color:#dc2626;padding:2px">×</button>
+        </div>`).join('');
+      html += `
+        <div class="card" style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+              <span style="font-weight:600;font-size:15px">${escapeHtml(ex.name)}</span>${hintHtml}
+            </div>
+            <button class="btn-danger" style="font-size:11px;padding:4px 8px" onclick="removeWorkoutExercise(${exIdx})">Quitar</button>
+          </div>
+          <div style="display:grid;grid-template-columns:36px 80px 80px 1fr 30px;gap:8px;margin-bottom:6px">
+            <span style="font-size:11px;color:var(--gray);text-align:center">#</span>
+            <span style="font-size:11px;color:var(--gray);text-align:center">Reps</span>
+            <span style="font-size:11px;color:var(--gray);text-align:center">Peso (kg)</span>
+            <span style="font-size:11px;color:var(--gray)">Notas</span><span></span>
+          </div>
+          ${setsHtml}
+          <button class="btn-secondary" style="width:100%;margin-top:4px;font-size:13px" onclick="addSet(${exIdx})">+ Añadir serie</button>
+        </div>`;
+    });
+    workoutCircuits.forEach((circ, cIdx) => {
+      const typeLabel = CIRCUIT_TYPE_LABELS[circ.type] || circ.type;
+      const typeColor = CIRCUIT_TYPE_COLORS[circ.type] || '#6b7280';
+      const circData = allCircuits.find(c => c.id === circ.circuitId);
+      const exWeightsHtml = (circData?.circuit_exercises || []).sort((a,b) => a.order_index - b.order_index)
+        .map(ce => `
+          <div style="display:grid;grid-template-columns:1fr 100px;gap:8px;align-items:center;margin-bottom:8px">
+            <span style="font-size:13px">${escapeHtml(ce.exercises?.name || '')}</span>
+            <input type="number" placeholder="Kg" min="0" step="0.5" value="${circ.exerciseWeights[ce.exercise_id]||''}"
+              onchange="updateCircuitWeight(${cIdx},'${ce.exercise_id}',this.value)" style="font-size:13px;padding:8px;text-align:center">
+          </div>`).join('');
+      html += `
+        <div class="card" style="margin-bottom:14px;border-left:4px solid ${typeColor}">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div>
+              <span style="font-weight:600;font-size:15px">${escapeHtml(circ.name)}</span>
+              <span style="font-size:11px;font-weight:600;color:white;background:${typeColor};padding:2px 8px;border-radius:10px;margin-left:8px">${typeLabel}</span>
+            </div>
+            <button class="btn-danger" style="font-size:11px;padding:4px 8px" onclick="removeWorkoutCircuit(${cIdx})">Quitar</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div><label style="font-size:12px">Rondas</label>
+              <input type="number" min="0" value="${circ.rounds||''}" onchange="updateCircuit(${cIdx},'rounds',this.value)" style="font-size:13px;padding:8px;margin-top:4px"></div>
+            <div><label style="font-size:12px">Duración (min)</label>
+              <input type="number" min="0" step="0.5" value="${circ.duration||''}" onchange="updateCircuit(${cIdx},'duration',this.value)" style="font-size:13px;padding:8px;margin-top:4px"></div>
+          </div>
+          ${exWeightsHtml ? `<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:8px">PESOS USADOS</div>${exWeightsHtml}</div>` : ''}
+          <div><label style="font-size:12px">Notas</label>
+            <input type="text" placeholder="Observaciones..." value="${circ.notes||''}" onchange="updateCircuit(${cIdx},'notes',this.value)" style="font-size:13px;padding:8px;margin-top:4px"></div>
+        </div>`;
+    });
+    container.innerHTML = html || '<div class="empty" style="padding:20px"><p>Añade ejercicios o circuitos abajo</p></div>';
+  }
+
+  function addSet(exIdx) { workoutExercises[exIdx].sets.push({reps:'',weight:'',notes:''}); renderWorkoutExercises(); }
+  function removeSet(exIdx, sIdx) { workoutExercises[exIdx].sets.splice(sIdx,1); renderWorkoutExercises(); }
+  function updateSet(exIdx, sIdx, field, value) { workoutExercises[exIdx].sets[sIdx][field] = value; }
+  function removeWorkoutExercise(exIdx) { workoutExercises.splice(exIdx,1); renderWorkoutExercises(); }
+  function removeWorkoutCircuit(cIdx) { workoutCircuits.splice(cIdx,1); renderWorkoutExercises(); }
+  function updateCircuit(cIdx, field, value) { workoutCircuits[cIdx][field] = value; }
+  function updateCircuitWeight(cIdx, exId, value) { workoutCircuits[cIdx].exerciseWeights[exId] = parseFloat(value)||null; }
+
+  function addWorkoutExercise() {
+    const sel = document.getElementById('wo-add-exercise-select');
+    const id = sel.value;
+    if (!id) { showToast('Selecciona un ejercicio', 'error'); return; }
+    const ex = allExercises.find(e => e.id === id);
+    workoutExercises.push({exerciseId:id, name:ex.name, sets:[], suggested_sets:null, suggested_reps:null, suggested_weight:null});
+    sel.value = '';
+    renderWorkoutExercises();
+  }
+
+  function addWorkoutCircuit() {
+    const sel = document.getElementById('wo-add-circuit-select');
+    const id = sel.value;
+    if (!id) { showToast('Selecciona un circuito', 'error'); return; }
+    const circ = allCircuits.find(c => c.id === id);
+    workoutCircuits.push({circuitId:id, name:circ.name, type:circ.type, rounds:'', duration:'', notes:'', exerciseWeights:{}});
+    sel.value = '';
+    renderWorkoutExercises();
+  }
+
+  async function saveWorkout() {
+    const today = new Date().toISOString().split('T')[0];
+    const notes = document.getElementById('wo-notes').value.trim();
+    const { data: workout, error } = await db.from('workouts').insert({
+      user_id: currentUser.id, date: today,
+      routine_session_id: activeSessionId || null,
+      notes: notes || null
+    }).select().single();
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    const setsPayload = [];
+    workoutExercises.forEach(ex => {
+      ex.sets.forEach((s,i) => {
+        if (!s.reps && !s.weight) return;
+        setsPayload.push({workout_id:workout.id, exercise_id:ex.exerciseId, set_number:i+1,
+          reps:parseInt(s.reps)||null, weight:parseFloat(s.weight)||null, notes:s.notes||null});
+      });
+    });
+    if (setsPayload.length > 0) await db.from('workout_sets').insert(setsPayload);
+    for (const circ of workoutCircuits) {
+      const { data: wc } = await db.from('workout_circuits').insert({
+        workout_id:workout.id, circuit_id:circ.circuitId,
+        rounds:parseInt(circ.rounds)||null, duration_minutes:parseFloat(circ.duration)||null, notes:circ.notes||null
+      }).select().single();
+      if (wc) {
+        const wcEx = Object.entries(circ.exerciseWeights).filter(([,w])=>w)
+          .map(([exId,w])=>({workout_circuit_id:wc.id, exercise_id:exId, weight:w}));
+        if (wcEx.length > 0) await db.from('workout_circuit_exercises').insert(wcEx);
+      }
+    }
+    showToast('¡Entrenamiento guardado!');
+    workoutExercises = []; workoutCircuits = []; activeSessionId = null;
+    showWorkoutStep(1);
+  }
+
   // ── RUTINAS ──
 
   let allRoutines = [];
