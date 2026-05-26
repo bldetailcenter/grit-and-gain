@@ -567,12 +567,36 @@
     </div>
   </div>
   <div class="page" id="page-history">
-    <div class="page-header"><h2 class="page-title">Historial</h2></div>
-    <div class="empty"><div class="empty-icon">📅</div><p>Próximamente</p></div>
+    <div class="page-header">
+      <h2 class="page-title">Historial</h2>
+    </div>
+    <!-- Lista de entrenamientos -->
+    <div id="history-list-view">
+      <div id="history-list"></div>
+    </div>
+    <!-- Detalle de un entrenamiento -->
+    <div id="history-detail-view" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="btn-secondary" onclick="backToHistoryList()">← Volver</button>
+        <div>
+          <div style="font-size:18px;font-weight:600" id="history-detail-date"></div>
+          <div style="font-size:13px;color:var(--gray)" id="history-detail-session"></div>
+        </div>
+        <button class="btn-danger" style="margin-left:auto" onclick="deleteWorkout()">Eliminar</button>
+      </div>
+      <div id="history-detail-content"></div>
+    </div>
   </div>
+
   <div class="page" id="page-stats">
     <div class="page-header"><h2 class="page-title">Estadísticas</h2></div>
-    <div class="empty"><div class="empty-icon">📊</div><p>Próximamente</p></div>
+    <div class="form-group" style="max-width:400px">
+      <label>Selecciona un ejercicio</label>
+      <select id="stats-exercise-select" onchange="loadExerciseStats()">
+        <option value="">-- Ejercicio --</option>
+      </select>
+    </div>
+    <div id="stats-content"></div>
   </div>
   <div class="page" id="page-photos">
     <div class="page-header"><h2 class="page-title">Fotos de progreso</h2></div>
@@ -717,6 +741,8 @@
     if (page === 'circuits') loadCircuits();
     if (page === 'routines') { loadExercises(); loadCircuits(); loadRoutines(); }
     if (page === 'workout') initWorkoutPage();
+    if (page === 'history') loadHistory();
+    if (page === 'stats') loadStatsPage();
   }
 
   function toggleSidebar() {
@@ -1466,6 +1492,252 @@
     if (error) { showToast('Error al eliminar', 'error'); return; }
     showToast('Sesión eliminada');
     loadRoutines();
+  }
+
+
+  // ── HISTORIAL ──
+
+  let currentWorkoutId = null;
+
+  async function loadHistory() {
+    const { data, error } = await db
+      .from('workouts')
+      .select('*, routine_sessions(name)')
+      .eq('user_id', currentUser.id)
+      .order('date', { ascending: false });
+    if (error) { showToast('Error al cargar historial', 'error'); return; }
+    renderHistory(data || []);
+  }
+
+  function renderHistory(list) {
+    document.getElementById('history-list-view').style.display = 'block';
+    document.getElementById('history-detail-view').style.display = 'none';
+    const container = document.getElementById('history-list');
+    if (list.length === 0) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><p>No hay entrenamientos registrados aún.</p></div>';
+      return;
+    }
+    container.innerHTML = list.map(w => {
+      const date = new Date(w.date + 'T12:00:00').toLocaleDateString('es-ES', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+      const dateStr = date.charAt(0).toUpperCase() + date.slice(1);
+      const session = w.routine_sessions?.name || 'Entrenamiento libre';
+      return `
+        <div class="card" style="cursor:pointer;transition:border-color 0.15s" onclick="openWorkoutDetail('${w.id}')"
+          onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:600;font-size:15px">${dateStr}</div>
+              <div style="font-size:13px;color:var(--gray);margin-top:3px">${escapeHtml(session)}</div>
+              ${w.notes ? `<div style="font-size:12px;color:var(--gray);margin-top:4px;font-style:italic">${escapeHtml(w.notes)}</div>` : ''}
+            </div>
+            <span style="color:var(--blue);font-size:18px">→</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function openWorkoutDetail(workoutId) {
+    currentWorkoutId = workoutId;
+    const { data: workout } = await db.from('workouts')
+      .select('*, routine_sessions(name)').eq('id', workoutId).single();
+    const { data: sets } = await db.from('workout_sets')
+      .select('*, exercises(name)').eq('workout_id', workoutId).order('exercise_id').order('set_number');
+    const { data: circuits } = await db.from('workout_circuits')
+      .select('*, circuits(name, type), workout_circuit_exercises(*, exercises(name))')
+      .eq('workout_id', workoutId);
+
+    const date = new Date(workout.date + 'T12:00:00').toLocaleDateString('es-ES', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    document.getElementById('history-detail-date').textContent = date.charAt(0).toUpperCase() + date.slice(1);
+    document.getElementById('history-detail-session').textContent = workout.routine_sessions?.name || 'Entrenamiento libre';
+
+    // Agrupar series por ejercicio
+    const byExercise = {};
+    (sets || []).forEach(s => {
+      const key = s.exercise_id;
+      if (!byExercise[key]) byExercise[key] = { name: s.exercises?.name || '', sets: [] };
+      byExercise[key].sets.push(s);
+    });
+
+    let html = '';
+
+    // Ejercicios
+    Object.values(byExercise).forEach(ex => {
+      const maxWeight = Math.max(...ex.sets.map(s => s.weight || 0));
+      const best = ex.sets.reduce((best, s) => {
+        if (!s.weight || !s.reps) return best;
+        const rm1 = calc1RM(s.weight, s.reps);
+        return rm1 > best.rm1 ? { rm1, weight: s.weight, reps: s.reps } : best;
+      }, { rm1: 0, weight: 0, reps: 0 });
+
+      const rm1 = best.rm1 > 0 ? best.rm1.toFixed(1) : '-';
+      const rm3 = best.rm1 > 0 ? calcNRM(best.rm1, 3).toFixed(1) : '-';
+      const rm5 = best.rm1 > 0 ? calcNRM(best.rm1, 5).toFixed(1) : '-';
+
+      const setsHtml = ex.sets.map(s => `
+        <div style="display:grid;grid-template-columns:40px 60px 70px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <span style="color:var(--gray);font-weight:600">S${s.set_number}</span>
+          <span>${s.reps || '-'} reps</span>
+          <span style="font-weight:600">${s.weight ? s.weight + ' kg' : '-'}</span>
+          <span style="color:var(--gray)">${s.notes || ''}</span>
+        </div>`).join('');
+
+      html += `
+        <div class="card" style="margin-bottom:14px">
+          <div style="font-weight:600;font-size:15px;margin-bottom:8px">${escapeHtml(ex.name)}</div>
+          ${setsHtml}
+          ${best.rm1 > 0 ? `
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">
+            <div style="background:var(--blue-light);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:11px;color:var(--gray);font-weight:600">1RM estimado</div>
+              <div style="font-size:18px;font-weight:700;color:var(--blue)">${rm1} kg</div>
+            </div>
+            <div style="background:var(--gray-light);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:11px;color:var(--gray);font-weight:600">3RM estimado</div>
+              <div style="font-size:18px;font-weight:700;color:var(--black)">${rm3} kg</div>
+            </div>
+            <div style="background:var(--gray-light);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:11px;color:var(--gray);font-weight:600">5RM estimado</div>
+              <div style="font-size:18px;font-weight:700;color:var(--black)">${rm5} kg</div>
+            </div>
+          </div>` : ''}
+        </div>`;
+    });
+
+    // Circuitos
+    (circuits || []).forEach(c => {
+      const typeLabel = CIRCUIT_TYPE_LABELS[c.circuits?.type] || c.circuits?.type || '';
+      const typeColor = CIRCUIT_TYPE_COLORS[c.circuits?.type] || '#6b7280';
+      const exHtml = (c.workout_circuit_exercises || []).map(ce => `
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)">
+          <span>${escapeHtml(ce.exercises?.name || '')}</span>
+          <span style="font-weight:600">${ce.weight ? ce.weight + ' kg' : '-'}</span>
+        </div>`).join('');
+      html += `
+        <div class="card" style="margin-bottom:14px;border-left:4px solid ${typeColor}">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span style="font-weight:600;font-size:15px">${escapeHtml(c.circuits?.name || '')}</span>
+            <span style="font-size:11px;font-weight:600;color:white;background:${typeColor};padding:2px 8px;border-radius:10px">${typeLabel}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div style="font-size:13px"><span style="color:var(--gray)">Rondas: </span><strong>${c.rounds || '-'}</strong></div>
+            <div style="font-size:13px"><span style="color:var(--gray)">Duración: </span><strong>${c.duration_minutes ? c.duration_minutes + ' min' : '-'}</strong></div>
+          </div>
+          ${exHtml}
+          ${c.notes ? `<div style="font-size:12px;color:var(--gray);margin-top:8px;font-style:italic">${escapeHtml(c.notes)}</div>` : ''}
+        </div>`;
+    });
+
+    if (workout.notes) {
+      html += `<div class="card" style="border-left:4px solid var(--blue)">
+        <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:4px">NOTAS DE SESIÓN</div>
+        <div style="font-size:14px">${escapeHtml(workout.notes)}</div>
+      </div>`;
+    }
+
+    document.getElementById('history-detail-content').innerHTML = html || '<div class="empty"><p>Sin datos registrados</p></div>';
+    document.getElementById('history-list-view').style.display = 'none';
+    document.getElementById('history-detail-view').style.display = 'block';
+  }
+
+  function backToHistoryList() {
+    document.getElementById('history-list-view').style.display = 'block';
+    document.getElementById('history-detail-view').style.display = 'none';
+  }
+
+  async function deleteWorkout() {
+    if (!confirm('¿Eliminar este entrenamiento?')) return;
+    const { error } = await db.from('workouts').delete().eq('id', currentWorkoutId);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Entrenamiento eliminado');
+    loadHistory();
+  }
+
+  // ── 1RM / 3RM / 5RM (fórmula Epley) ──
+  function calc1RM(weight, reps) {
+    if (reps === 1) return weight;
+    return weight * (1 + reps / 30);
+  }
+  function calcNRM(rm1, n) {
+    return rm1 / (1 + n / 30);
+  }
+
+  // ── ESTADÍSTICAS POR EJERCICIO ──
+
+  async function loadStatsPage() {
+    if (allExercises.length === 0) await loadExercises();
+    const sel = document.getElementById('stats-exercise-select');
+    sel.innerHTML = '<option value="">-- Ejercicio --</option>' +
+      allExercises.map(e => `<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
+    document.getElementById('stats-content').innerHTML = '';
+  }
+
+  async function loadExerciseStats() {
+    const exId = document.getElementById('stats-exercise-select').value;
+    if (!exId) { document.getElementById('stats-content').innerHTML = ''; return; }
+
+    const { data: sets } = await db.from('workout_sets')
+      .select('*, workouts(date)')
+      .eq('exercise_id', exId)
+      .order('workouts(date)', { ascending: false });
+
+    if (!sets || sets.length === 0) {
+      document.getElementById('stats-content').innerHTML = '<div class="empty"><p>No hay datos para este ejercicio.</p></div>';
+      return;
+    }
+
+    // Calcular el mejor 1RM histórico
+    let best = { rm1: 0, weight: 0, reps: 0, date: '' };
+    sets.forEach(s => {
+      if (!s.weight || !s.reps) return;
+      const rm1 = calc1RM(s.weight, s.reps);
+      if (rm1 > best.rm1) best = { rm1, weight: s.weight, reps: s.reps, date: s.workouts?.date };
+    });
+
+    const rm1 = best.rm1.toFixed(1);
+    const rm3 = calcNRM(best.rm1, 3).toFixed(1);
+    const rm5 = calcNRM(best.rm1, 5).toFixed(1);
+
+    // Historial de pesos agrupado por fecha
+    const byDate = {};
+    sets.forEach(s => {
+      const d = s.workouts?.date;
+      if (!d) return;
+      if (!byDate[d]) byDate[d] = [];
+      byDate[d].push(s);
+    });
+
+    const histHtml = Object.entries(byDate).map(([date, dateSets]) => {
+      const dateStr = new Date(date + 'T12:00:00').toLocaleDateString('es-ES', {day:'2-digit', month:'short', year:'numeric'});
+      const maxW = Math.max(...dateSets.map(s => s.weight || 0));
+      const setsStr = dateSets.map(s => `${s.reps}×${s.weight}kg`).join(' | ');
+      return `
+        <div style="display:grid;grid-template-columns:120px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <span style="color:var(--gray)">${dateStr}</span>
+          <span>${setsStr}</span>
+          <span style="font-weight:600;color:var(--blue)">${maxW} kg</span>
+        </div>`;
+    }).join('');
+
+    document.getElementById('stats-content').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
+        <div style="background:var(--blue-light);border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:4px">1RM ESTIMADO</div>
+          <div style="font-size:28px;font-weight:700;color:var(--blue)">${rm1}<span style="font-size:14px"> kg</span></div>
+          <div style="font-size:11px;color:var(--gray);margin-top:4px">${best.weight}kg × ${best.reps} reps</div>
+        </div>
+        <div style="background:var(--gray-light);border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:4px">3RM ESTIMADO</div>
+          <div style="font-size:28px;font-weight:700;color:var(--black)">${rm3}<span style="font-size:14px"> kg</span></div>
+        </div>
+        <div style="background:var(--gray-light);border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:4px">5RM ESTIMADO</div>
+          <div style="font-size:28px;font-weight:700;color:var(--black)">${rm5}<span style="font-size:14px"> kg</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px">Historial de pesos</div>
+        ${histHtml}
+      </div>`;
   }
 
   document.getElementById('routine-modal').addEventListener('click', function(e) {
