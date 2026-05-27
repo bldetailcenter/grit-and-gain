@@ -599,8 +599,11 @@
     <div id="stats-content"></div>
   </div>
   <div class="page" id="page-photos">
-    <div class="page-header"><h2 class="page-title">Fotos de progreso</h2></div>
-    <div class="empty"><div class="empty-icon">📸</div><p>Próximamente</p></div>
+    <div class="page-header">
+      <h2 class="page-title">Fotos de progreso</h2>
+      <button class="btn-primary" onclick="openPhotoModal()">+ Añadir foto</button>
+    </div>
+    <div id="photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px"></div>
   </div>
 
 </main>
@@ -624,6 +627,54 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeExerciseModal()">Cancelar</button>
       <button class="btn-primary" onclick="saveExercise()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FOTO -->
+<div class="modal-overlay" id="photo-modal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-title" id="photo-modal-title">Añadir foto</div>
+    <div class="form-group">
+      <label>Fecha *</label>
+      <input type="date" id="photo-date">
+    </div>
+    <div class="form-group">
+      <label>Peso corporal (kg)</label>
+      <input type="number" id="photo-weight" placeholder="Ej: 80.5" min="0" step="0.1">
+    </div>
+    <div class="form-group">
+      <label>Foto *</label>
+      <input type="file" id="photo-file" accept="image/*" style="padding:8px">
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="photo-notes" placeholder="Observaciones..."></textarea>
+    </div>
+    <div id="photo-preview" style="display:none;margin-bottom:12px">
+      <img id="photo-preview-img" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closePhotoModal()">Cancelar</button>
+      <button class="btn-primary" id="photo-save-btn" onclick="savePhoto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER FOTO -->
+<div class="modal-overlay" id="photo-view-modal">
+  <div class="modal" style="max-width:500px;padding:20px">
+    <img id="photo-view-img" style="width:100%;border-radius:8px;max-height:60vh;object-fit:contain;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:600" id="photo-view-date"></div>
+        <div style="font-size:13px;color:var(--gray)" id="photo-view-weight"></div>
+        <div style="font-size:13px;color:var(--gray);margin-top:4px" id="photo-view-notes"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-danger" onclick="deletePhoto()">Eliminar</button>
+        <button class="btn-secondary" onclick="closePhotoViewModal()">Cerrar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -743,6 +794,7 @@
     if (page === 'workout') initWorkoutPage();
     if (page === 'history') loadHistory();
     if (page === 'stats') loadStatsPage();
+    if (page === 'photos') loadPhotos();
   }
 
   function toggleSidebar() {
@@ -1786,6 +1838,148 @@
         ${histHtml}
       </div>`;
   }
+
+  // ── FOTOS DE PROGRESO ──
+
+  let currentPhotoId = null;
+
+  async function loadPhotos() {
+    const { data, error } = await db.from('progress_photos')
+      .select('*').order('date', { ascending: false });
+    if (error) { showToast('Error al cargar fotos', 'error'); return; }
+    renderPhotos(data || []);
+  }
+
+  function renderPhotos(list) {
+    const grid = document.getElementById('photos-grid');
+    if (list.length === 0) {
+      grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📸</div><p>No hay fotos aún. ¡Añade la primera!</p></div>';
+      return;
+    }
+    grid.innerHTML = list.map(p => {
+      const date = new Date(p.date + 'T12:00:00').toLocaleDateString('es-ES', {day:'2-digit', month:'short', year:'numeric'});
+      return `
+        <div onclick="viewPhoto('${p.id}')" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1.5px solid var(--border);transition:border-color 0.15s"
+          onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="height:180px;background:var(--gray-light);overflow:hidden">
+            ${p.photo_url
+              ? `<img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">`
+              : `<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:40px">📷</div>`}
+          </div>
+          <div style="padding:12px">
+            <div style="font-weight:600;font-size:14px">${date}</div>
+            ${p.weight ? `<div style="font-size:13px;color:var(--blue);margin-top:2px">${p.weight} kg</div>` : ''}
+            ${p.notes ? `<div style="font-size:12px;color:var(--gray);margin-top:4px">${escapeHtml(p.notes)}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function openPhotoModal() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('photo-date').value = today;
+    document.getElementById('photo-weight').value = '';
+    document.getElementById('photo-file').value = '';
+    document.getElementById('photo-notes').value = '';
+    document.getElementById('photo-preview').style.display = 'none';
+    document.getElementById('photo-modal').classList.add('open');
+  }
+
+  function closePhotoModal() {
+    document.getElementById('photo-modal').classList.remove('open');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('photo-file');
+    if (fileInput) {
+      fileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          document.getElementById('photo-preview-img').src = e.target.result;
+          document.getElementById('photo-preview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  });
+
+  async function savePhoto() {
+    const date = document.getElementById('photo-date').value;
+    const weight = document.getElementById('photo-weight').value;
+    const notes = document.getElementById('photo-notes').value.trim();
+    const file = document.getElementById('photo-file').files[0];
+
+    if (!date) { showToast('La fecha es obligatoria', 'error'); return; }
+
+    const btn = document.getElementById('photo-save-btn');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
+    let photoUrl = null;
+
+    if (file) {
+      const ext = file.name.split('.').pop();
+      const path = `${currentUser.id}/${Date.now()}.${ext}`;
+      const { data: uploadData, error: uploadError } = await db.storage
+        .from('progress-photos')
+        .upload(path, file, { upsert: false });
+
+      if (uploadError) {
+        showToast('Error al subir la foto: ' + uploadError.message, 'error');
+        btn.disabled = false; btn.textContent = 'Guardar';
+        return;
+      }
+
+      const { data: urlData } = db.storage.from('progress-photos').getPublicUrl(path);
+      photoUrl = urlData?.publicUrl || null;
+    }
+
+    const { error } = await db.from('progress_photos').insert({
+      user_id: currentUser.id,
+      date,
+      weight: parseFloat(weight) || null,
+      notes: notes || null,
+      photo_url: photoUrl
+    });
+
+    if (error) { showToast('Error al guardar', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; return; }
+
+    showToast('Foto guardada');
+    closePhotoModal();
+    loadPhotos();
+    btn.disabled = false; btn.textContent = 'Guardar';
+  }
+
+  async function viewPhoto(id) {
+    const { data: p } = await db.from('progress_photos').select('*').eq('id', id).single();
+    if (!p) return;
+    currentPhotoId = id;
+    const date = new Date(p.date + 'T12:00:00').toLocaleDateString('es-ES', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+    document.getElementById('photo-view-date').textContent = date.charAt(0).toUpperCase() + date.slice(1);
+    document.getElementById('photo-view-weight').textContent = p.weight ? p.weight + ' kg' : '';
+    document.getElementById('photo-view-notes').textContent = p.notes || '';
+    const img = document.getElementById('photo-view-img');
+    if (p.photo_url) { img.src = p.photo_url; img.style.display = 'block'; }
+    else img.style.display = 'none';
+    document.getElementById('photo-view-modal').classList.add('open');
+  }
+
+  function closePhotoViewModal() {
+    document.getElementById('photo-view-modal').classList.remove('open');
+  }
+
+  async function deletePhoto() {
+    if (!confirm('¿Eliminar esta foto?')) return;
+    const { error } = await db.from('progress_photos').delete().eq('id', currentPhotoId);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Foto eliminada');
+    closePhotoViewModal();
+    loadPhotos();
+  }
+
+  document.getElementById('photo-modal').addEventListener('click', function(e) { if (e.target === this) closePhotoModal(); });
+  document.getElementById('photo-view-modal').addEventListener('click', function(e) { if (e.target === this) closePhotoViewModal(); });
 
   document.getElementById('routine-modal').addEventListener('click', function(e) {
     if (e.target === this) closeRoutineModal();
