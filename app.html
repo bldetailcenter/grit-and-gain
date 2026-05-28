@@ -1472,15 +1472,21 @@
     currentRoutineId = routineId;
     sessionExRows = [];
     sessionCircRows = [];
-    document.getElementById('session-exercise-rows').innerHTML = '';
-    document.getElementById('session-circuit-rows').innerHTML = '';
     document.getElementById('session-modal-title').textContent = sessionId ? 'Editar sesión' : 'Nueva sesión';
     document.getElementById('sess-name').value = '';
-    if (allExercises.length === 0) await loadExercises();
-    if (allCircuits.length === 0) await loadCircuits();
-
+    document.getElementById('session-exercise-rows').innerHTML = '<div style="text-align:center;padding:12px;color:var(--gray);font-size:13px">Cargando ejercicios...</div>';
+    document.getElementById('session-circuit-rows').innerHTML = '';
     document.getElementById('session-modal').classList.add('open');
-    await new Promise(r => setTimeout(r, 50));
+
+    // Cargar datos necesarios antes de construir las filas
+    await Promise.all([
+      allExercises.length === 0 ? loadExercises() : Promise.resolve(),
+      allCircuits.length === 0 ? loadCircuits() : Promise.resolve()
+    ]);
+
+    document.getElementById('session-exercise-rows').innerHTML = '';
+    document.getElementById('session-circuit-rows').innerHTML = '';
+
     if (sessionId) {
       const { data: sess } = await db.from('routine_sessions').select('*').eq('id', sessionId).single();
       document.getElementById('sess-name').value = sess?.name || '';
