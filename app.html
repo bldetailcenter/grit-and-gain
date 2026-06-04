@@ -430,6 +430,17 @@
     <button class="nav-item" onclick="navigate('photos')">
       <span class="icon">📸</span> Fotos
     </button>
+
+    <div class="nav-section">Nutrición</div>
+    <button class="nav-item" onclick="navigate('nutrition')">
+      <span class="icon">🥗</span> Registro diario
+    </button>
+    <button class="nav-item" onclick="navigate('foods')">
+      <span class="icon">🍎</span> Alimentos
+    </button>
+    <button class="nav-item" onclick="navigate('recipes')">
+      <span class="icon">📖</span> Recetas
+    </button>
   </nav>
   <div class="sidebar-footer">
     <div class="user-info" id="user-email"></div>
@@ -606,6 +617,64 @@
     <div id="photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px"></div>
   </div>
 
+  <!-- NUTRICIÓN: REGISTRO DIARIO -->
+  <div class="page" id="page-nutrition">
+    <div class="page-header">
+      <h2 class="page-title">Registro diario</h2>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="date" id="nutrition-date" onchange="loadNutritionLog()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+        <button class="btn-primary" onclick="openAddFoodModal()">+ Añadir</button>
+      </div>
+    </div>
+    <!-- Resumen macros -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px" id="nutrition-summary">
+      <div style="background:var(--blue-light);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:11px;font-weight:600;color:var(--gray)">CALORÍAS</div>
+        <div style="font-size:26px;font-weight:700;color:var(--blue)" id="sum-kcal">0</div>
+        <div style="font-size:11px;color:var(--gray)">kcal</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:11px;font-weight:600;color:var(--gray)">PROTEÍNA</div>
+        <div style="font-size:26px;font-weight:700;color:#16a34a" id="sum-protein">0</div>
+        <div style="font-size:11px;color:var(--gray)">g</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:11px;font-weight:600;color:var(--gray)">CARBOS</div>
+        <div style="font-size:26px;font-weight:700;color:#d97706" id="sum-carbs">0</div>
+        <div style="font-size:11px;color:var(--gray)">g</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:11px;font-weight:600;color:var(--gray)">GRASA</div>
+        <div style="font-size:26px;font-weight:700;color:#dc2626" id="sum-fat">0</div>
+        <div style="font-size:11px;color:var(--gray)">g</div>
+      </div>
+    </div>
+    <!-- Comidas por tipo -->
+    <div id="nutrition-meals"></div>
+  </div>
+
+  <!-- NUTRICIÓN: ALIMENTOS -->
+  <div class="page" id="page-foods">
+    <div class="page-header">
+      <h2 class="page-title">Alimentos</h2>
+      <button class="btn-primary" onclick="openFoodModal()">+ Nuevo alimento</button>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Buscar alimento..." oninput="filterFoods(this.value)">
+    </div>
+    <div id="foods-list"></div>
+  </div>
+
+  <!-- NUTRICIÓN: RECETAS -->
+  <div class="page" id="page-recipes">
+    <div class="page-header">
+      <h2 class="page-title">Recetas</h2>
+      <button class="btn-primary" onclick="openRecipeModal()">+ Nueva receta</button>
+    </div>
+    <div id="recipes-list"></div>
+  </div>
+
 </main>
 
 <!-- MODAL EJERCICIO -->
@@ -627,6 +696,130 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeExerciseModal()">Cancelar</button>
       <button class="btn-primary" onclick="saveExercise()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AÑADIR COMIDA -->
+<div class="modal-overlay" id="add-food-modal">
+  <div class="modal" style="max-width:540px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">Añadir al registro</div>
+    <div class="form-group">
+      <label>Comida</label>
+      <select id="add-food-meal-type">
+        <option value="desayuno">Desayuno</option>
+        <option value="almuerzo">Almuerzo</option>
+        <option value="comida">Comida</option>
+        <option value="merienda">Merienda</option>
+        <option value="cena">Cena</option>
+        <option value="snack">Snack</option>
+      </select>
+    </div>
+    <!-- Tabs -->
+    <div class="tabs" style="margin-bottom:16px">
+      <button class="tab active" onclick="switchAddFoodTab('search')">Buscar</button>
+      <button class="tab" onclick="switchAddFoodTab('my')">Mis alimentos</button>
+      <button class="tab" onclick="switchAddFoodTab('recipe')">Recetas</button>
+    </div>
+    <!-- Buscar en OFF -->
+    <div id="add-tab-search">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input type="text" id="off-search-input" placeholder="Buscar en base de datos..." style="flex:1" onkeydown="if(event.key==='Enter')searchOFF()">
+        <button class="btn-primary" onclick="searchOFF()">Buscar</button>
+      </div>
+      <div id="off-results" style="max-height:200px;overflow-y:auto"></div>
+    </div>
+    <!-- Mis alimentos -->
+    <div id="add-tab-my" style="display:none">
+      <div id="my-foods-select-list" style="max-height:200px;overflow-y:auto"></div>
+    </div>
+    <!-- Recetas -->
+    <div id="add-tab-recipe" style="display:none">
+      <div id="my-recipes-select-list" style="max-height:200px;overflow-y:auto"></div>
+    </div>
+    <!-- Alimento seleccionado -->
+    <div id="add-food-selected" style="display:none;margin-top:16px">
+      <div style="background:var(--blue-light);border-radius:8px;padding:12px;margin-bottom:12px">
+        <div style="font-weight:600" id="add-food-selected-name"></div>
+        <div style="font-size:12px;color:var(--gray);margin-top:4px" id="add-food-selected-macros"></div>
+      </div>
+      <div class="form-group">
+        <label>Cantidad (g)</label>
+        <input type="number" id="add-food-amount" placeholder="100" min="1" oninput="updateAddFoodMacros()">
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px" id="add-food-macro-preview"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAddFoodModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveNutritionLog()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ALIMENTO PROPIO -->
+<div class="modal-overlay" id="food-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title" id="food-modal-title">Nuevo alimento</div>
+    <div style="font-size:12px;color:var(--gray);margin-bottom:16px">Valores por 100g</div>
+    <div class="form-group">
+      <label>Nombre *</label>
+      <input type="text" id="food-name" placeholder="Ej: Pechuga de pollo">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label>Calorías (kcal) *</label>
+        <input type="number" id="food-calories" min="0" step="0.1">
+      </div>
+      <div class="form-group">
+        <label>Proteína (g)</label>
+        <input type="number" id="food-protein" min="0" step="0.1">
+      </div>
+      <div class="form-group">
+        <label>Carbohidratos (g)</label>
+        <input type="number" id="food-carbs" min="0" step="0.1">
+      </div>
+      <div class="form-group">
+        <label>Grasa (g)</label>
+        <input type="number" id="food-fat" min="0" step="0.1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="food-notes" placeholder="Marca, preparación..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeFoodModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveFood()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECETA -->
+<div class="modal-overlay" id="recipe-modal">
+  <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title" id="recipe-modal-title">Nueva receta</div>
+    <div class="form-group">
+      <label>Nombre *</label>
+      <input type="text" id="recipe-name" placeholder="Ej: Tortilla de avena">
+    </div>
+    <div class="form-group">
+      <label>Gramos totales de la receta</label>
+      <input type="number" id="recipe-grams" placeholder="Ej: 300" min="1">
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="recipe-notes" placeholder="Instrucciones, consejos..."></textarea>
+    </div>
+    <div style="margin:8px 0 10px;font-size:14px;font-weight:600">Ingredientes</div>
+    <div id="recipe-ingredient-rows"></div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input type="text" id="recipe-ing-search" placeholder="Buscar ingrediente..." style="flex:1" oninput="searchRecipeIngredient(this.value)">
+    </div>
+    <div id="recipe-ing-results" style="max-height:150px;overflow-y:auto;margin-bottom:12px"></div>
+    <div id="recipe-macro-preview" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRecipeModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveRecipe()">Guardar receta</button>
     </div>
   </div>
 </div>
@@ -795,6 +988,9 @@
     if (page === 'history') loadHistory();
     if (page === 'stats') loadStatsPage();
     if (page === 'photos') loadPhotos();
+    if (page === 'nutrition') { initNutritionDate(); loadNutritionLog(); }
+    if (page === 'foods') renderFoodsList();
+    if (page === 'recipes') renderRecipesList();
   }
 
   function toggleSidebar() {
@@ -1986,6 +2182,523 @@
 
   document.getElementById('photo-modal').addEventListener('click', function(e) { if (e.target === this) closePhotoModal(); });
   document.getElementById('photo-view-modal').addEventListener('click', function(e) { if (e.target === this) closePhotoViewModal(); });
+
+  // ── NUTRICIÓN ──
+
+  let allFoods = [];
+  let allRecipes = [];
+  let addFoodSelected = null; // {type:'off'|'food'|'recipe', data:{}}
+  let editingFoodId = null;
+  let editingRecipeId = null;
+  let recipeIngredients = []; // [{type:'food'|'off', id, name, kcal, protein, carbs, fat, amount}]
+
+  const MEAL_LABELS = { desayuno:'Desayuno', almuerzo:'Almuerzo', comida:'Comida', merienda:'Merienda', cena:'Cena', snack:'Snack' };
+  const MEAL_ORDER = ['desayuno','almuerzo','comida','merienda','cena','snack'];
+
+  // Navigate hook
+  const _origNavigate = navigate;
+
+  function initNutritionDate() {
+    const d = document.getElementById('nutrition-date');
+    if (!d.value) d.value = new Date().toISOString().split('T')[0];
+  }
+
+  // ── REGISTRO DIARIO ──
+
+  async function loadNutritionLog() {
+    const date = document.getElementById('nutrition-date').value;
+    if (!date) return;
+    const { data } = await db.from('nutrition_logs').select('*').eq('user_id', currentUser.id).eq('date', date);
+    renderNutritionLog(data || []);
+  }
+
+  function renderNutritionLog(logs) {
+    let totalKcal=0, totalP=0, totalC=0, totalF=0;
+    logs.forEach(l => {
+      const factor = l.amount_grams / 100;
+      totalKcal += (l.off_calories || 0) * factor;
+      totalP += (l.off_protein || 0) * factor;
+      totalC += (l.off_carbs || 0) * factor;
+      totalF += (l.off_fat || 0) * factor;
+    });
+    document.getElementById('sum-kcal').textContent = Math.round(totalKcal);
+    document.getElementById('sum-protein').textContent = totalP.toFixed(1);
+    document.getElementById('sum-carbs').textContent = totalC.toFixed(1);
+    document.getElementById('sum-fat').textContent = totalF.toFixed(1);
+
+    const byMeal = {};
+    MEAL_ORDER.forEach(m => byMeal[m] = []);
+    logs.forEach(l => { if (byMeal[l.meal_type]) byMeal[l.meal_type].push(l); });
+
+    const container = document.getElementById('nutrition-meals');
+    let html = '';
+    MEAL_ORDER.forEach(meal => {
+      const items = byMeal[meal];
+      if (items.length === 0) return;
+      const mealKcal = items.reduce((s,l) => s + (l.off_calories||0)*(l.amount_grams/100), 0);
+      const itemsHtml = items.map(l => {
+        const factor = l.amount_grams/100;
+        const kcal = Math.round((l.off_calories||0)*factor);
+        const name = l.off_name || 'Alimento';
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+            <div>
+              <span style="font-weight:500">${escapeHtml(name)}</span>
+              <span style="color:var(--gray);margin-left:8px">${l.amount_grams}g</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="font-weight:600;color:var(--blue)">${kcal} kcal</span>
+              <span style="font-size:11px;color:var(--gray)">P:${((l.off_protein||0)*factor).toFixed(1)} C:${((l.off_carbs||0)*factor).toFixed(1)} G:${((l.off_fat||0)*factor).toFixed(1)}</span>
+              <button onclick="deleteNutritionLog('${l.id}')" style="background:none;border:none;cursor:pointer;color:var(--error);font-size:16px;padding:0">×</button>
+            </div>
+          </div>`;
+      }).join('');
+      html += `
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-weight:600;font-size:15px">${MEAL_LABELS[meal]}</div>
+            <div style="font-size:13px;color:var(--blue);font-weight:600">${Math.round(mealKcal)} kcal</div>
+          </div>
+          ${itemsHtml}
+        </div>`;
+    });
+    container.innerHTML = html || '<div class="empty"><p>Sin registros para este día. Pulsa + Añadir.</p></div>';
+  }
+
+  async function deleteNutritionLog(id) {
+    await db.from('nutrition_logs').delete().eq('id', id);
+    loadNutritionLog();
+  }
+
+  // ── MODAL AÑADIR COMIDA ──
+
+  function openAddFoodModal() {
+    addFoodSelected = null;
+    document.getElementById('add-food-selected').style.display = 'none';
+    document.getElementById('off-search-input').value = '';
+    document.getElementById('off-results').innerHTML = '';
+    document.getElementById('add-food-amount').value = '100';
+    switchAddFoodTab('search');
+    document.getElementById('add-food-modal').classList.add('open');
+    if (allFoods.length === 0) loadFoods().then(renderMyFoodsSelectList);
+    else renderMyFoodsSelectList();
+    if (allRecipes.length === 0) loadRecipes().then(renderMyRecipesSelectList);
+    else renderMyRecipesSelectList();
+  }
+
+  function closeAddFoodModal() { document.getElementById('add-food-modal').classList.remove('open'); }
+
+  function switchAddFoodTab(tab) {
+    ['search','my','recipe'].forEach(t => {
+      document.getElementById('add-tab-'+t).style.display = t===tab ? 'block' : 'none';
+    });
+    document.querySelectorAll('#add-food-modal .tab').forEach((btn,i) => {
+      btn.classList.toggle('active', ['search','my','recipe'][i] === tab);
+    });
+  }
+
+  async function searchOFF() {
+    const q = document.getElementById('off-search-input').value.trim();
+    if (!q) return;
+    const container = document.getElementById('off-results');
+    container.innerHTML = '<div style="text-align:center;padding:12px;color:var(--gray);font-size:13px">Buscando...</div>';
+    try {
+      const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&fields=id,product_name,nutriments,serving_size`);
+      const data = await res.json();
+      const products = (data.products || []).filter(p => p.product_name && p.nutriments);
+      if (products.length === 0) { container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px">Sin resultados. Prueba otro término.</div>'; return; }
+      container.innerHTML = products.map(p => {
+        const n = p.nutriments;
+        const kcal = n['energy-kcal_100g'] || n['energy_100g'] ? Math.round((n['energy-kcal_100g'] || n['energy_100g']/4.18)) : '?';
+        return `<div onclick="selectOFFProduct(${JSON.stringify(p).replace(/"/g,'&quot;')})"
+          style="padding:10px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
+          onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''"
+        >
+          <div style="font-weight:500">${escapeHtml(p.product_name)}</div>
+          <div style="color:var(--gray);font-size:11px">${kcal} kcal | P:${(n.proteins_100g||0).toFixed(1)}g C:${(n.carbohydrates_100g||0).toFixed(1)}g G:${(n.fat_100g||0).toFixed(1)}g · por 100g</div>
+        </div>`;
+      }).join('');
+    } catch(e) { container.innerHTML = '<div style="padding:12px;color:var(--error);font-size:13px">Error al conectar con Open Food Facts.</div>'; }
+  }
+
+  function selectOFFProduct(p) {
+    const n = p.nutriments;
+    addFoodSelected = {
+      type: 'off',
+      id: p.id,
+      name: p.product_name,
+      kcal: n['energy-kcal_100g'] || Math.round((n['energy_100g']||0)/4.18),
+      protein: n.proteins_100g || 0,
+      carbs: n.carbohydrates_100g || 0,
+      fat: n.fat_100g || 0
+    };
+    showAddFoodSelected();
+  }
+
+  function renderMyFoodsSelectList() {
+    const container = document.getElementById('my-foods-select-list');
+    if (allFoods.length === 0) { container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px">No tienes alimentos guardados.</div>'; return; }
+    container.innerHTML = allFoods.map(f => `
+      <div onclick="selectMyFood('${f.id}')"
+        style="padding:10px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
+        onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''">
+        <div style="font-weight:500">${escapeHtml(f.name)}</div>
+        <div style="color:var(--gray);font-size:11px">${f.calories} kcal | P:${f.protein}g C:${f.carbs}g G:${f.fat}g · por 100g</div>
+      </div>`).join('');
+  }
+
+  function selectMyFood(id) {
+    const f = allFoods.find(x => x.id === id);
+    addFoodSelected = { type:'food', id:f.id, name:f.name, kcal:f.calories, protein:f.protein, carbs:f.carbs, fat:f.fat };
+    showAddFoodSelected();
+  }
+
+  function renderMyRecipesSelectList() {
+    const container = document.getElementById('my-recipes-select-list');
+    if (allRecipes.length === 0) { container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px">No tienes recetas guardadas.</div>'; return; }
+    container.innerHTML = allRecipes.map(r => `
+      <div onclick="selectMyRecipe('${r.id}')"
+        style="padding:10px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
+        onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''">
+        <div style="font-weight:500">${escapeHtml(r.name)}</div>
+        <div style="color:var(--gray);font-size:11px">${r.total_grams ? r.total_grams+'g totales' : ''}</div>
+      </div>`).join('');
+  }
+
+  function selectMyRecipe(id) {
+    const r = allRecipes.find(x => x.id === id);
+    addFoodSelected = { type:'recipe', id:r.id, name:r.name, kcal:r._kcal||0, protein:r._protein||0, carbs:r._carbs||0, fat:r._fat||0 };
+    showAddFoodSelected();
+  }
+
+  function showAddFoodSelected() {
+    if (!addFoodSelected) return;
+    document.getElementById('add-food-selected-name').textContent = addFoodSelected.name;
+    document.getElementById('add-food-selected-macros').textContent =
+      `${addFoodSelected.kcal} kcal · P:${addFoodSelected.protein}g · C:${addFoodSelected.carbs}g · G:${addFoodSelected.fat}g (por 100g)`;
+    document.getElementById('add-food-selected').style.display = 'block';
+    updateAddFoodMacros();
+  }
+
+  function updateAddFoodMacros() {
+    if (!addFoodSelected) return;
+    const amount = parseFloat(document.getElementById('add-food-amount').value) || 100;
+    const factor = amount / 100;
+    const kcal = (addFoodSelected.kcal * factor).toFixed(0);
+    const p = (addFoodSelected.protein * factor).toFixed(1);
+    const c = (addFoodSelected.carbs * factor).toFixed(1);
+    const f = (addFoodSelected.fat * factor).toFixed(1);
+    document.getElementById('add-food-macro-preview').innerHTML = `
+      <div style="background:var(--blue-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">KCAL</div>
+        <div style="font-size:18px;font-weight:700;color:var(--blue)">${kcal}</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">PROT</div>
+        <div style="font-size:18px;font-weight:700;color:#16a34a">${p}g</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">CARB</div>
+        <div style="font-size:18px;font-weight:700;color:#d97706">${c}g</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">GRAS</div>
+        <div style="font-size:18px;font-weight:700;color:#dc2626">${f}g</div>
+      </div>`;
+  }
+
+  async function saveNutritionLog() {
+    if (!addFoodSelected) { showToast('Selecciona un alimento', 'error'); return; }
+    const amount = parseFloat(document.getElementById('add-food-amount').value);
+    if (!amount) { showToast('Introduce la cantidad', 'error'); return; }
+    const date = document.getElementById('nutrition-date').value;
+    const meal = document.getElementById('add-food-meal-type').value;
+    const payload = {
+      user_id: currentUser.id, date, meal_type: meal,
+      amount_grams: amount,
+      off_name: addFoodSelected.name,
+      off_calories: addFoodSelected.kcal,
+      off_protein: addFoodSelected.protein,
+      off_carbs: addFoodSelected.carbs,
+      off_fat: addFoodSelected.fat,
+    };
+    if (addFoodSelected.type === 'off') payload.off_id = addFoodSelected.id;
+    if (addFoodSelected.type === 'food') payload.food_id = addFoodSelected.id;
+    if (addFoodSelected.type === 'recipe') payload.recipe_id = addFoodSelected.id;
+    const { error } = await db.from('nutrition_logs').insert(payload);
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    showToast('Añadido al registro');
+    closeAddFoodModal();
+    loadNutritionLog();
+  }
+
+  // ── ALIMENTOS PROPIOS ──
+
+  async function loadFoods() {
+    const { data } = await db.from('foods').select('*').order('name');
+    allFoods = data || [];
+    return allFoods;
+  }
+
+  async function renderFoodsList() {
+    await loadFoods();
+    const container = document.getElementById('foods-list');
+    if (allFoods.length === 0) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">🍎</div><p>No hay alimentos guardados.</p></div>'; return;
+    }
+    container.innerHTML = allFoods.map(f => `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">${escapeHtml(f.name)}</div>
+            <div class="card-desc">${f.calories} kcal · P:${f.protein}g · C:${f.carbs}g · G:${f.fat}g <span style="color:var(--gray)">(por 100g)</span></div>
+            ${f.notes ? `<div class="card-desc" style="margin-top:4px">${escapeHtml(f.notes)}</div>` : ''}
+          </div>
+          <div class="card-actions">
+            <button class="btn-edit" onclick="editFood('${f.id}')">Editar</button>
+            <button class="btn-danger" onclick="deleteFood('${f.id}')">Eliminar</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function filterFoods(q) {
+    const filtered = allFoods.filter(f => f.name.toLowerCase().includes(q.toLowerCase()));
+    const container = document.getElementById('foods-list');
+    container.innerHTML = filtered.map(f => `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">${escapeHtml(f.name)}</div>
+            <div class="card-desc">${f.calories} kcal · P:${f.protein}g · C:${f.carbs}g · G:${f.fat}g</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-edit" onclick="editFood('${f.id}')">Editar</button>
+            <button class="btn-danger" onclick="deleteFood('${f.id}')">Eliminar</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function openFoodModal(id=null) {
+    editingFoodId = id;
+    document.getElementById('food-modal-title').textContent = id ? 'Editar alimento' : 'Nuevo alimento';
+    if (id) {
+      const f = allFoods.find(x => x.id===id);
+      document.getElementById('food-name').value = f.name||'';
+      document.getElementById('food-calories').value = f.calories||'';
+      document.getElementById('food-protein').value = f.protein||'';
+      document.getElementById('food-carbs').value = f.carbs||'';
+      document.getElementById('food-fat').value = f.fat||'';
+      document.getElementById('food-notes').value = f.notes||'';
+    } else {
+      ['food-name','food-calories','food-protein','food-carbs','food-fat','food-notes'].forEach(id => document.getElementById(id).value='');
+    }
+    document.getElementById('food-modal').classList.add('open');
+  }
+
+  function closeFoodModal() { document.getElementById('food-modal').classList.remove('open'); }
+  function editFood(id) { openFoodModal(id); }
+
+  async function saveFood() {
+    const name = document.getElementById('food-name').value.trim();
+    const calories = parseFloat(document.getElementById('food-calories').value);
+    if (!name || !calories) { showToast('Nombre y calorías son obligatorios', 'error'); return; }
+    const payload = { name, calories, protein: parseFloat(document.getElementById('food-protein').value)||0,
+      carbs: parseFloat(document.getElementById('food-carbs').value)||0,
+      fat: parseFloat(document.getElementById('food-fat').value)||0,
+      notes: document.getElementById('food-notes').value.trim()||null, user_id: currentUser.id };
+    let error;
+    if (editingFoodId) ({ error } = await db.from('foods').update(payload).eq('id', editingFoodId));
+    else ({ error } = await db.from('foods').insert(payload));
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    showToast(editingFoodId ? 'Alimento actualizado' : 'Alimento guardado');
+    closeFoodModal();
+    renderFoodsList();
+  }
+
+  async function deleteFood(id) {
+    if (!confirm('¿Eliminar este alimento?')) return;
+    await db.from('foods').delete().eq('id', id);
+    showToast('Alimento eliminado');
+    renderFoodsList();
+  }
+
+  // ── RECETAS ──
+
+  async function loadRecipes() {
+    const { data } = await db.from('recipes').select('*, recipe_ingredients(*)').order('name');
+    allRecipes = data || [];
+    return allRecipes;
+  }
+
+  async function renderRecipesList() {
+    await loadRecipes();
+    const container = document.getElementById('recipes-list');
+    if (allRecipes.length === 0) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">📖</div><p>No hay recetas guardadas.</p></div>'; return;
+    }
+    container.innerHTML = allRecipes.map(r => {
+      let kcal=0,p=0,c=0,f=0;
+      (r.recipe_ingredients||[]).forEach(ing => {
+        const factor = ing.amount_grams/100;
+        kcal += (ing.off_calories||0)*factor;
+        p += (ing.off_protein||0)*factor;
+        c += (ing.off_carbs||0)*factor;
+        f += (ing.off_fat||0)*factor;
+      });
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">${escapeHtml(r.name)}</div>
+              <div class="card-desc">${Math.round(kcal)} kcal · P:${p.toFixed(1)}g · C:${c.toFixed(1)}g · G:${f.toFixed(1)}g</div>
+              ${r.notes ? `<div class="card-desc">${escapeHtml(r.notes)}</div>` : ''}
+            </div>
+            <div class="card-actions">
+              <button class="btn-edit" onclick="editRecipe('${r.id}')">Editar</button>
+              <button class="btn-danger" onclick="deleteRecipe('${r.id}')">Eliminar</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function openRecipeModal(id=null) {
+    editingRecipeId = id;
+    recipeIngredients = [];
+    document.getElementById('recipe-modal-title').textContent = id ? 'Editar receta' : 'Nueva receta';
+    document.getElementById('recipe-name').value = '';
+    document.getElementById('recipe-grams').value = '';
+    document.getElementById('recipe-notes').value = '';
+    document.getElementById('recipe-ingredient-rows').innerHTML = '';
+    document.getElementById('recipe-ing-results').innerHTML = '';
+    document.getElementById('recipe-ing-search').value = '';
+    document.getElementById('recipe-macro-preview').innerHTML = '';
+    if (id) {
+      const r = allRecipes.find(x => x.id===id);
+      document.getElementById('recipe-name').value = r.name||'';
+      document.getElementById('recipe-grams').value = r.total_grams||'';
+      document.getElementById('recipe-notes').value = r.notes||'';
+      (r.recipe_ingredients||[]).forEach(ing => {
+        recipeIngredients.push({ id: ing.id, name: ing.off_name, kcal: ing.off_calories, protein: ing.off_protein,
+          carbs: ing.off_carbs, fat: ing.off_fat, amount: ing.amount_grams, food_id: ing.food_id, off_id: ing.off_id });
+      });
+      renderRecipeIngredientRows();
+    }
+    document.getElementById('recipe-modal').classList.add('open');
+  }
+
+  function closeRecipeModal() { document.getElementById('recipe-modal').classList.remove('open'); }
+  async function editRecipe(id) { await loadRecipes(); openRecipeModal(id); }
+
+  async function searchRecipeIngredient(q) {
+    if (q.length < 2) { document.getElementById('recipe-ing-results').innerHTML = ''; return; }
+    const container = document.getElementById('recipe-ing-results');
+    // Buscar en mis alimentos primero
+    const myMatches = allFoods.filter(f => f.name.toLowerCase().includes(q.toLowerCase())).slice(0,3);
+    let html = myMatches.map(f => `
+      <div onclick="addRecipeIngredient({type:'food',id:'${f.id}',name:'${escapeHtml(f.name)}',kcal:${f.calories},protein:${f.protein},carbs:${f.carbs},fat:${f.fat}})"
+        style="padding:8px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
+        onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''">
+        <span style="font-weight:500">${escapeHtml(f.name)}</span>
+        <span style="color:var(--gray);font-size:11px;margin-left:8px">Mis alimentos</span>
+      </div>`).join('');
+    // Buscar en OFF
+    try {
+      const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=5&fields=id,product_name,nutriments`);
+      const data = await res.json();
+      (data.products||[]).filter(p=>p.product_name&&p.nutriments).slice(0,5).forEach(p => {
+        const n = p.nutriments;
+        const kcal = n['energy-kcal_100g'] || Math.round((n['energy_100g']||0)/4.18);
+        html += `<div onclick="addRecipeIngredient({type:'off',id:'${p.id}',name:${JSON.stringify(p.product_name)},kcal:${kcal},protein:${n.proteins_100g||0},carbs:${n.carbohydrates_100g||0},fat:${n.fat_100g||0}})"
+          style="padding:8px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
+          onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''">
+          <span style="font-weight:500">${escapeHtml(p.product_name)}</span>
+          <span style="color:var(--gray);font-size:11px;margin-left:8px">${kcal} kcal/100g</span>
+        </div>`;
+      });
+    } catch(e) {}
+    container.innerHTML = html || '<div style="padding:8px;color:var(--gray);font-size:13px">Sin resultados</div>';
+  }
+
+  function addRecipeIngredient(item) {
+    recipeIngredients.push({...item, amount: 100});
+    document.getElementById('recipe-ing-results').innerHTML = '';
+    document.getElementById('recipe-ing-search').value = '';
+    renderRecipeIngredientRows();
+  }
+
+  function renderRecipeIngredientRows() {
+    let kcal=0,p=0,c=0,f=0;
+    const html = recipeIngredients.map((ing,i) => {
+      const factor = ing.amount/100;
+      kcal += ing.kcal*factor; p += ing.protein*factor; c += ing.carbs*factor; f += ing.fat*factor;
+      return `
+        <div style="display:grid;grid-template-columns:1fr 90px 36px;gap:8px;align-items:center;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:500">${escapeHtml(ing.name)}</span>
+          <input type="number" value="${ing.amount}" min="1" placeholder="g"
+            onchange="recipeIngredients[${i}].amount=parseFloat(this.value)||0;renderRecipeIngredientRows()"
+            style="font-size:13px;padding:8px;text-align:center">
+          <button onclick="recipeIngredients.splice(${i},1);renderRecipeIngredientRows()"
+            style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:16px;color:#dc2626;padding:4px">×</button>
+        </div>`;
+    }).join('');
+    document.getElementById('recipe-ingredient-rows').innerHTML = html;
+    document.getElementById('recipe-macro-preview').innerHTML = recipeIngredients.length ? `
+      <div style="background:var(--blue-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">KCAL</div>
+        <div style="font-size:18px;font-weight:700;color:var(--blue)">${Math.round(kcal)}</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">PROT</div>
+        <div style="font-size:18px;font-weight:700;color:#16a34a">${p.toFixed(1)}g</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">CARB</div>
+        <div style="font-size:18px;font-weight:700;color:#d97706">${c.toFixed(1)}g</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">GRAS</div>
+        <div style="font-size:18px;font-weight:700;color:#dc2626">${f.toFixed(1)}g</div>
+      </div>` : '';
+  }
+
+  async function saveRecipe() {
+    const name = document.getElementById('recipe-name').value.trim();
+    if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+    const payload = { name, notes: document.getElementById('recipe-notes').value.trim()||null,
+      total_grams: parseFloat(document.getElementById('recipe-grams').value)||null, user_id: currentUser.id };
+    let recipeId = editingRecipeId;
+    if (editingRecipeId) {
+      await db.from('recipes').update(payload).eq('id', editingRecipeId);
+      await db.from('recipe_ingredients').delete().eq('recipe_id', editingRecipeId);
+    } else {
+      const { data } = await db.from('recipes').insert(payload).select().single();
+      recipeId = data.id;
+    }
+    if (recipeIngredients.length > 0) {
+      await db.from('recipe_ingredients').insert(recipeIngredients.map(ing => ({
+        recipe_id: recipeId, food_id: ing.food_id||null, off_id: ing.off_id||null,
+        off_name: ing.name, off_calories: ing.kcal, off_protein: ing.protein,
+        off_carbs: ing.carbs, off_fat: ing.fat, amount_grams: ing.amount
+      })));
+    }
+    showToast(editingRecipeId ? 'Receta actualizada' : 'Receta guardada');
+    closeRecipeModal();
+    renderRecipesList();
+  }
+
+  async function deleteRecipe(id) {
+    if (!confirm('¿Eliminar esta receta?')) return;
+    await db.from('recipes').delete().eq('id', id);
+    showToast('Receta eliminada');
+    renderRecipesList();
+  }
+
+  document.getElementById('add-food-modal').addEventListener('click', function(e) { if (e.target === this) closeAddFoodModal(); });
+  document.getElementById('food-modal').addEventListener('click', function(e) { if (e.target === this) closeFoodModal(); });
+  document.getElementById('recipe-modal').addEventListener('click', function(e) { if (e.target === this) closeRecipeModal(); });
 
   document.getElementById('routine-modal').addEventListener('click', function(e) {
     if (e.target === this) closeRoutineModal();
