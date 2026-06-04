@@ -1061,7 +1061,7 @@
   function renderExercises(list) {
     const container = document.getElementById('exercises-list');
     if (list.length === 0) {
-      container.innerHTML = `<div class="empty"><div class="empty-icon">💪</div><p>No hay ejercicios aún. ¡Crea el primero!</p></div>`;
+      container.innerHTML = `<div class="empty"><div class="empty-icon">💪</div><p>Sin ejercicios. Los débiles descansan.</p><small>Añade el primero y empieza a construir tu arsenal.</small></div>`;
       return;
     }
     container.innerHTML = list.map(ex => `
@@ -1179,7 +1179,7 @@
   function renderCircuits(list) {
     const container = document.getElementById('circuits-list');
     if (list.length === 0) {
-      container.innerHTML = `<div class="empty"><div class="empty-icon">🔄</div><p>No hay circuitos aún. ¡Crea el primero!</p></div>`;
+      container.innerHTML = `<div class="empty"><div class="empty-icon">🔄</div><p>Sin circuitos. El dolor es temporal.</p><small>Crea tu primer circuito y dale caña.</small></div>`;
       return;
     }
     container.innerHTML = list.map(c => {
@@ -1499,7 +1499,7 @@
             <input type="text" placeholder="Observaciones..." value="${circ.notes||''}" onchange="updateCircuit(${cIdx},'notes',this.value)" style="font-size:13px;padding:8px;margin-top:4px"></div>
         </div>`;
     });
-    container.innerHTML = html || '<div class="empty" style="padding:20px"><p>Añade ejercicios o circuitos abajo</p></div>';
+    container.innerHTML = html || '<div class="empty" style="padding:20px"><p>Listo para atacar. Añade ejercicios o circuitos.</p></div>';
   }
 
   function addSet(exIdx) { workoutExercises[exIdx].sets.push({reps:'',weight:'',notes:''}); renderWorkoutExercises(); }
@@ -1616,7 +1616,7 @@
   function renderRoutines(list) {
     const container = document.getElementById('routines-list');
     if (list.length === 0) {
-      container.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>No hay rutinas aún. ¡Crea la primera!</p></div>`;
+      container.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>Sin rutinas. La improvisación es para aficionados.</p><small>Define tu plan de ataque y síguelo.</small></div>`;
       return;
     }
     container.innerHTML = list.map(r => {
@@ -1850,7 +1850,7 @@
     document.getElementById('history-detail-view').style.display = 'none';
     const container = document.getElementById('history-list');
     if (list.length === 0) {
-      container.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><p>No hay entrenamientos registrados aún.</p></div>';
+      container.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><p>Historial vacío. Las excusas no cuentan.</p><small>Cada sesión registrada es prueba de que estuviste aquí.</small></div>';
       return;
     }
     container.innerHTML = list.map(w => {
@@ -2479,7 +2479,7 @@
     await loadFoods();
     const container = document.getElementById('foods-list');
     if (allFoods.length === 0) {
-      container.innerHTML = '<div class="empty"><div class="empty-icon">🍎</div><p>No hay alimentos guardados.</p></div>'; return;
+      container.innerHTML = '<div class="empty"><div class="empty-icon">🍎</div><p>Sin alimentos. El cuerpo es lo que comes.</p><small>Registra tus alimentos y controla cada gramo.</small></div>'; return;
     }
     container.innerHTML = allFoods.map(f => `
       <div class="card">
@@ -2571,7 +2571,7 @@
     await loadRecipes();
     const container = document.getElementById('recipes-list');
     if (allRecipes.length === 0) {
-      container.innerHTML = '<div class="empty"><div class="empty-icon">📖</div><p>No hay recetas guardadas.</p></div>'; return;
+      container.innerHTML = '<div class="empty"><div class="empty-icon">📖</div><p>Sin recetas. Come como entrenas: con cabeza.</p><small>Crea tu primera receta y calcula sus macros al instante.</small></div>'; return;
     }
     container.innerHTML = allRecipes.map(r => {
       let kcal=0,p=0,c=0,f=0;
