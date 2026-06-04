@@ -207,6 +207,25 @@
       <div class="message" id="login-msg"></div>
     </div>
 
+    <!-- INVITE -->
+    <div class="panel" id="invite-panel">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:28px;margin-bottom:8px">🔐</div>
+        <div style="font-weight:600;font-size:16px">Establece tu contraseña</div>
+        <div style="font-size:13px;color:#6b7280;margin-top:4px">Has sido invitado. Elige una contraseña para acceder.</div>
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="invite-password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label>Repetir contraseña</label>
+        <input type="password" id="invite-password2" placeholder="••••••••">
+      </div>
+      <button class="btn" onclick="setInvitePassword()">Establecer contraseña</button>
+      <div class="message" id="invite-msg"></div>
+    </div>
+
     <!-- REGISTER -->
     <div class="panel" id="panel-register">
       <div class="form-group">
@@ -233,10 +252,47 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZscHNwemNrdnFtaW9pcnV5dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjYwNTYsImV4cCI6MjA5NTMwMjA1Nn0.JU4k-YAzJ03ACbMHJib8sLALQCvJXq1no7-m045prMs';
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Redirigir si ya hay sesión
-  db.auth.getSession().then(({ data }) => {
+  // Gestionar token de invitación o sesión activa
+  async function handleInviteToken() {
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.replace('#', '?'));
+    const accessToken = params.get('access_token');
+    const type = params.get('type');
+
+    if (accessToken && (type === 'invite' || type === 'recovery')) {
+      const { error } = await db.auth.setSession({ access_token: accessToken, refresh_token: params.get('refresh_token') || '' });
+      if (!error) {
+        document.getElementById('panel-login').classList.remove('active');
+        document.getElementById('invite-panel').classList.add('active');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        return;
+      }
+    }
+
+    const { data } = await db.auth.getSession();
     if (data.session) window.location.href = 'app.html';
-  });
+  }
+
+  handleInviteToken();
+
+  async function setInvitePassword() {
+    const password = document.getElementById('invite-password').value;
+    const password2 = document.getElementById('invite-password2').value;
+    if (!password || !password2) return showMsg('invite-msg', 'Rellena todos los campos.', 'error');
+    if (password !== password2) return showMsg('invite-msg', 'Las contraseñas no coinciden.', 'error');
+    if (password.length < 6) return showMsg('invite-msg', 'Mínimo 6 caracteres.', 'error');
+
+    const btn = document.querySelector('#invite-panel .btn');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
+    const { error } = await db.auth.updateUser({ password });
+    if (error) {
+      showMsg('invite-msg', 'Error: ' + error.message, 'error');
+      btn.disabled = false; btn.textContent = 'Establecer contraseña';
+    } else {
+      window.location.href = 'app.html';
+    }
+  }
 
   function switchTab(tab) {
     document.querySelectorAll('.tab').forEach((t, i) => {
