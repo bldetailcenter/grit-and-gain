@@ -436,7 +436,7 @@
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
     <h1>GRIT<span>&</span>GAIN</h1>
-    <p>Tu progreso, tu historia.</p>
+    <p id="sidebar-quote" style="font-size:10px;color:#9ca3af;margin-top:4px;font-style:italic;line-height:1.4"></p>
   </div>
   <nav>
     <div class="nav-section">Principal</div>
@@ -530,6 +530,7 @@
 
     <!-- PASO 1: elegir tipo -->
     <div id="workout-step1">
+      <div id="workout-quote-banner" style="background:var(--black);color:var(--white);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:14px;font-style:italic;line-height:1.5;display:none"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:500px">
         <div class="card" style="cursor:pointer;text-align:center;padding:28px 16px" onclick="startWorkout('routine')">
           <div style="font-size:32px;margin-bottom:10px">📋</div>
@@ -616,6 +617,7 @@
     <div class="page-header">
       <h2 class="page-title">Historial</h2>
     </div>
+    <div id="history-quote" style="background:var(--gray-light);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:10px 16px;margin-bottom:20px;font-size:13px;color:var(--gray);font-style:italic"></div>
     <!-- Lista de entrenamientos -->
     <div id="history-list-view">
       <div id="history-list"></div>
@@ -1008,6 +1010,7 @@
     currentUser = session.user;
     document.getElementById('user-email').textContent = currentUser.email;
     loadExercises();
+    initQuotes();
   }
 
   // NAVEGACIÓN
@@ -1148,6 +1151,87 @@
 
   function escapeHtml(str) {
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+
+  // ── FRASES MOTIVADORAS ──
+
+  const QUOTES = [
+    "El dolor que sientes hoy es la fuerza que sentirás mañana.",
+    "No entrenas para ganar. Entrenas para no perder nunca.",
+    "Cada serie es una orden. Ejecútala.",
+    "El que para, retrocede. Tú no paras.",
+    "La disciplina no negocia. Tú tampoco.",
+    "El cuerpo grita parar. La mente dice una más.",
+    "No hay atajos. Solo trabajo y más trabajo.",
+    "El que madruga entrena. El que no, se queda atrás.",
+    "Sudor ahora. Victoria después.",
+    "No busques motivación. Busca disciplina.",
+    "El hierro no miente. Los resultados tampoco.",
+    "Cada repetición cuenta. Hazla como si fuera la última.",
+    "La fuerza no se pide. Se construye.",
+    "Aquí no hay excusas. Solo resultados.",
+    "Lo fácil no te hace mejor. Lo difícil, sí.",
+    "Entrena como si tu vida dependiera de ello.",
+    "El límite está en tu cabeza. Rómpelo.",
+    "Nadie recordará tus excusas. Sí tus marcas.",
+    "Un día más sin entrenar es un día regalado a tu rival.",
+    "La rutina es tu arma. Afílala cada día.",
+  ];
+
+  const WORKOUT_START_QUOTES = [
+    "🔫 Carga el arma. Es hora de trabajar.",
+    "⚔️ Sin cuartel. Sin excusas. Empieza.",
+    "🚨 Alerta máxima. El hierro no espera.",
+    "💣 Hoy no hay piedad. Ni contigo mismo.",
+    "🦁 Los leones no descansan cuando tienen hambre.",
+    "🔒 La sesión está bloqueada. Solo hay una salida: acabarla.",
+    "🚔 Detén todas las excusas. Operación en curso.",
+    "⚡ Descarga todo lo que tienes. Ahora.",
+  ];
+
+  const WORKOUT_SAVE_QUOTES = [
+    "✅ Misión completada. Descansa como un soldado.",
+    "🏆 Otro día en el campo. Bien hecho.",
+    "💪 Registrado. El hierro recuerda lo que hiciste.",
+    "🔒 Sesión archivada. Mañana más.",
+    "⚔️ Batalla ganada. La guerra continúa.",
+    "📋 Parte de operaciones guardado. Buen trabajo, agente.",
+  ];
+
+  const HISTORY_QUOTES = [
+    "Cada entrada es una prueba de que estuviste aquí.",
+    "Tu historial no miente. ¿Estás satisfecho?",
+    "Los números no tienen ego. Solo verdad.",
+    "Mira atrás para saber cuánto has avanzado.",
+    "El pasado entrena. El presente ejecuta. El futuro premia.",
+  ];
+
+  function getQuoteOfDay(arr) {
+    const day = Math.floor(Date.now() / 86400000);
+    return arr[day % arr.length];
+  }
+
+  function getRandomQuote(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function initQuotes() {
+    const sidebarQ = document.getElementById('sidebar-quote');
+    if (sidebarQ) sidebarQ.textContent = '"' + getQuoteOfDay(QUOTES) + '"';
+  }
+
+  function showWorkoutStartQuote() {
+    const banner = document.getElementById('workout-quote-banner');
+    if (!banner) return;
+    banner.textContent = getRandomQuote(WORKOUT_START_QUOTES);
+    banner.style.display = 'block';
+    setTimeout(() => { banner.style.display = 'none'; }, 4000);
+  }
+
+  function showHistoryQuote() {
+    const el = document.getElementById('history-quote');
+    if (el) el.textContent = '"' + getQuoteOfDay(HISTORY_QUOTES) + '"';
   }
 
   init();
@@ -1377,6 +1461,7 @@
     workoutExercises = [];
     workoutCircuits = [];
     activeSessionId = null;
+    showWorkoutStartQuote();
     if (mode === 'routine') {
       showWorkoutStep(2);
     } else {
@@ -1589,7 +1674,7 @@
         if (wcEx.length > 0) await db.from('workout_circuit_exercises').insert(wcEx);
       }
     }
-    showToast('¡Entrenamiento guardado!');
+    showToast(getRandomQuote(WORKOUT_SAVE_QUOTES));
     workoutExercises = []; workoutCircuits = []; activeSessionId = null;
     showWorkoutStep(1);
   }
@@ -1836,6 +1921,7 @@
   let currentWorkoutId = null;
 
   async function loadHistory() {
+    showHistoryQuote();
     const { data, error } = await db
       .from('workouts')
       .select('*, routine_sessions(name)')
