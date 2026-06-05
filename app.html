@@ -1519,7 +1519,25 @@
   let workoutExercises = [];
   let workoutCircuits = [];
   let activeSessionId = null;
-  let exerciseBestRM = {}; // cache: exerciseId -> best 1RM ever
+  let exerciseBestRM = {};
+  let exerciseLastSession = {}; // cache: exerciseId -> [{reps, weight}] última sesión
+
+  async function fetchLastSession(exerciseId) {
+    if (exerciseLastSession[exerciseId] !== undefined) return exerciseLastSession[exerciseId];
+    // Buscar el último workout que tenga este ejercicio
+    const { data } = await db.from('workout_sets')
+      .select('set_number, reps, weight, workouts(date)')
+      .eq('exercise_id', exerciseId)
+      .order('workouts(date)', { ascending: false })
+      .order('set_number', { ascending: true })
+      .limit(20);
+    if (!data || data.length === 0) { exerciseLastSession[exerciseId] = []; return []; }
+    // Agrupar por fecha y coger la más reciente
+    const lastDate = data[0].workouts?.date;
+    const lastSets = data.filter(s => s.workouts?.date === lastDate);
+    exerciseLastSession[exerciseId] = lastSets;
+    return lastSets;
+  } // cache: exerciseId -> best 1RM ever
 
   async function fetchBestRM(exerciseId) {
     if (exerciseBestRM[exerciseId] !== undefined) return exerciseBestRM[exerciseId];
@@ -1612,6 +1630,8 @@
       circuitId: c.circuit_id, name: c.circuits?.name || '', type: c.circuits?.type || '',
       rounds: '', duration: '', notes: '', exerciseWeights: {}
     }));
+    // Precargar datos de última sesión para todos los ejercicios
+    await Promise.all(workoutExercises.map(ex => fetchLastSession(ex.exerciseId)));
     renderWorkoutExercises();
     showWorkoutStep(3);
   }
@@ -1625,20 +1645,30 @@
       if (ex.suggested_reps) hint.push(ex.suggested_reps + ' reps');
       if (ex.suggested_weight) hint.push(ex.suggested_weight + 'kg');
       const hintHtml = hint.length ? `<span style="font-size:12px;color:var(--blue);background:var(--blue-light);padding:2px 8px;border-radius:10px;margin-left:8px">📌 ${hint.join(' · ')}</span>` : '';
-      const setsHtml = ex.sets.map((s, sIdx) => `
+      const setsHtml = ex.sets.map((s, sIdx) => {
+        const prevReps = s.prevReps || '';
+        const prevWeight = s.prevWeight || '';
+        const prevHint = (prevReps || prevWeight)
+          ? `<span style="font-size:11px;color:#9ca3af;margin-left:44px;display:block;margin-top:2px">Última vez: ${prevReps ? prevReps+' reps' : ''}${prevReps && prevWeight ? ' · ' : ''}${prevWeight ? prevWeight+'kg' : ''}</span>`
+          : '';
+        return `
         <div style="margin-bottom:10px">
-          <div style="display:grid;grid-template-columns:36px 80px 80px 1fr 30px;gap:8px;align-items:center;margin-bottom:4px">
+          <div style="display:grid;grid-template-columns:36px 80px 80px 1fr 30px;gap:8px;align-items:center;margin-bottom:2px">
             <span style="font-size:13px;font-weight:600;color:var(--gray);text-align:center">S${sIdx+1}</span>
-            <input type="number" placeholder="Reps" value="${s.reps||''}" min="0"
-              onchange="updateSet(${exIdx},${sIdx},'reps',this.value)" style="font-size:13px;padding:8px;text-align:center">
-            <input type="number" placeholder="Kg" value="${s.weight||''}" min="0" step="0.5"
-              onchange="updateSet(${exIdx},${sIdx},'weight',this.value)" style="font-size:13px;padding:8px;text-align:center">
+            <input type="number" placeholder="${prevReps || 'Reps'}" value="${s.reps||''}" min="0"
+              onchange="updateSet(${exIdx},${sIdx},'reps',this.value)"
+              style="font-size:13px;padding:8px;text-align:center${prevReps && !s.reps ? ';border-color:#d1d5db;background:#f9fafb' : ''}">
+            <input type="number" placeholder="${prevWeight || 'Kg'}" value="${s.weight||''}" min="0" step="0.5"
+              onchange="updateSet(${exIdx},${sIdx},'weight',this.value)"
+              style="font-size:13px;padding:8px;text-align:center${prevWeight && !s.weight ? ';border-color:#d1d5db;background:#f9fafb' : ''}">
             <input type="text" placeholder="Notas" value="${s.notes||''}"
               onchange="updateSet(${exIdx},${sIdx},'notes',this.value)" style="font-size:13px;padding:8px">
             <button onclick="removeSet(${exIdx},${sIdx})" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:14px;color:#dc2626;padding:2px">×</button>
           </div>
+          ${prevHint}
           <div id="rm-badge-${exIdx}-${sIdx}" style="display:none;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;margin-left:44px;width:fit-content"></div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
       html += `
         <div class="card" style="margin-bottom:14px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -1691,7 +1721,15 @@
     container.innerHTML = html || '<div class="empty" style="padding:20px"><p>Listo para atacar. Añade ejercicios o circuitos.</p></div>';
   }
 
-  function addSet(exIdx) { workoutExercises[exIdx].sets.push({reps:'',weight:'',notes:''}); renderWorkoutExercises(); }
+  async function addSet(exIdx) {
+    const ex = workoutExercises[exIdx];
+    const sIdx = ex.sets.length;
+    // Obtener placeholder de la sesión anterior
+    const lastSets = await fetchLastSession(ex.exerciseId);
+    const lastSet = lastSets[sIdx] || lastSets[lastSets.length - 1] || null;
+    ex.sets.push({ reps:'', weight:'', notes:'', prevReps: lastSet?.reps || null, prevWeight: lastSet?.weight || null });
+    renderWorkoutExercises();
+  }
   function removeSet(exIdx, sIdx) { workoutExercises[exIdx].sets.splice(sIdx,1); renderWorkoutExercises(); }
   function updateSet(exIdx, sIdx, field, value) {
     workoutExercises[exIdx].sets[sIdx][field] = value;
