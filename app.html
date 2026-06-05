@@ -664,26 +664,35 @@
       </div>
     </div>
     <!-- Resumen macros -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px" id="nutrition-summary">
-      <div style="background:var(--blue-light);border-radius:12px;padding:14px;text-align:center">
-        <div style="font-size:11px;font-weight:600;color:var(--gray)">CALORÍAS</div>
-        <div style="font-size:26px;font-weight:700;color:var(--blue)" id="sum-kcal">0</div>
-        <div style="font-size:11px;color:var(--gray)">kcal</div>
+    <div id="nutrition-summary" style="margin-bottom:20px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px">
+        <div style="background:var(--blue-light);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:11px;font-weight:600;color:var(--gray)">CALORÍAS</div>
+          <div style="font-size:26px;font-weight:700;color:var(--blue)" id="sum-kcal">0</div>
+          <div style="font-size:11px;color:var(--gray)" id="sum-kcal-goal">kcal</div>
+          <div style="background:#dbeafe;border-radius:4px;height:5px;margin-top:6px;overflow:hidden"><div id="bar-kcal" style="height:100%;background:var(--blue);border-radius:4px;width:0%;transition:width 0.4s"></div></div>
+        </div>
+        <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:11px;font-weight:600;color:var(--gray)">PROTEÍNA</div>
+          <div style="font-size:26px;font-weight:700;color:#16a34a" id="sum-protein">0</div>
+          <div style="font-size:11px;color:var(--gray)" id="sum-protein-goal">g</div>
+          <div style="background:#dcfce7;border-radius:4px;height:5px;margin-top:6px;overflow:hidden"><div id="bar-protein" style="height:100%;background:#16a34a;border-radius:4px;width:0%;transition:width 0.4s"></div></div>
+        </div>
+        <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:11px;font-weight:600;color:var(--gray)">CARBOS</div>
+          <div style="font-size:26px;font-weight:700;color:#d97706" id="sum-carbs">0</div>
+          <div style="font-size:11px;color:var(--gray)" id="sum-carbs-goal">g</div>
+          <div style="background:#fef3c7;border-radius:4px;height:5px;margin-top:6px;overflow:hidden"><div id="bar-carbs" style="height:100%;background:#d97706;border-radius:4px;width:0%;transition:width 0.4s"></div></div>
+        </div>
+        <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:11px;font-weight:600;color:var(--gray)">GRASA</div>
+          <div style="font-size:26px;font-weight:700;color:#dc2626" id="sum-fat">0</div>
+          <div style="font-size:11px;color:var(--gray)" id="sum-fat-goal">g</div>
+          <div style="background:#fee2e2;border-radius:4px;height:5px;margin-top:6px;overflow:hidden"><div id="bar-fat" style="height:100%;background:#dc2626;border-radius:4px;width:0%;transition:width 0.4s"></div></div>
+        </div>
       </div>
-      <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
-        <div style="font-size:11px;font-weight:600;color:var(--gray)">PROTEÍNA</div>
-        <div style="font-size:26px;font-weight:700;color:#16a34a" id="sum-protein">0</div>
-        <div style="font-size:11px;color:var(--gray)">g</div>
-      </div>
-      <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
-        <div style="font-size:11px;font-weight:600;color:var(--gray)">CARBOS</div>
-        <div style="font-size:26px;font-weight:700;color:#d97706" id="sum-carbs">0</div>
-        <div style="font-size:11px;color:var(--gray)">g</div>
-      </div>
-      <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
-        <div style="font-size:11px;font-weight:600;color:var(--gray)">GRASA</div>
-        <div style="font-size:26px;font-weight:700;color:#dc2626" id="sum-fat">0</div>
-        <div style="font-size:11px;color:var(--gray)">g</div>
+      <div style="text-align:right">
+        <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="openGoalsModal()">🎯 Configurar objetivos</button>
       </div>
     </div>
     <!-- Comidas por tipo -->
@@ -733,6 +742,101 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeExerciseModal()">Cancelar</button>
       <button class="btn-primary" onclick="saveExercise()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OBJETIVOS NUTRICIONALES -->
+<div class="modal-overlay" id="goals-modal">
+  <div class="modal" style="max-width:540px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">Objetivos nutricionales</div>
+    <div class="tabs" style="margin-bottom:20px">
+      <button class="tab active" onclick="switchGoalsTab('manual')">Manual</button>
+      <button class="tab" onclick="switchGoalsTab('calculator')">Calculadora</button>
+    </div>
+
+    <!-- Manual -->
+    <div id="goals-tab-manual">
+      <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Define directamente tus objetivos diarios.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>Calorías (kcal) *</label>
+          <input type="number" id="goal-kcal" min="0" placeholder="Ej: 2200">
+        </div>
+        <div class="form-group">
+          <label>Proteína (g) *</label>
+          <input type="number" id="goal-protein" min="0" placeholder="Ej: 160">
+        </div>
+        <div class="form-group">
+          <label>Carbohidratos (g) *</label>
+          <input type="number" id="goal-carbs" min="0" placeholder="Ej: 250">
+        </div>
+        <div class="form-group">
+          <label>Grasa (g) *</label>
+          <input type="number" id="goal-fat" min="0" placeholder="Ej: 70">
+        </div>
+      </div>
+    </div>
+
+    <!-- Calculadora -->
+    <div id="goals-tab-calculator" style="display:none">
+      <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Calcula tus necesidades según tus datos.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>Peso (kg)</label>
+          <input type="number" id="calc-weight" min="30" max="300" step="0.1" placeholder="Ej: 80">
+        </div>
+        <div class="form-group">
+          <label>Altura (cm)</label>
+          <input type="number" id="calc-height" min="100" max="250" placeholder="Ej: 178">
+        </div>
+        <div class="form-group">
+          <label>Edad</label>
+          <input type="number" id="calc-age" min="10" max="100" placeholder="Ej: 30">
+        </div>
+        <div class="form-group">
+          <label>Sexo</label>
+          <select id="calc-sex">
+            <option value="male">Hombre</option>
+            <option value="female">Mujer</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nivel de actividad</label>
+        <select id="calc-activity">
+          <option value="1.2">Sedentario (poco o nada de ejercicio)</option>
+          <option value="1.375">Ligero (1-3 días/semana)</option>
+          <option value="1.55" selected>Moderado (3-5 días/semana)</option>
+          <option value="1.725">Activo (6-7 días/semana)</option>
+          <option value="1.9">Muy activo (2 veces al día)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Objetivo</label>
+        <select id="calc-goal">
+          <option value="deficit">Perder grasa (déficit -300 kcal)</option>
+          <option value="maintain" selected>Mantenimiento</option>
+          <option value="surplus">Ganar músculo (superávit +300 kcal)</option>
+        </select>
+      </div>
+      <button class="btn-secondary" style="width:100%;margin-bottom:16px" onclick="calculateGoals()">⚡ Calcular</button>
+      <!-- Resultado calculadora -->
+      <div id="calc-result" style="display:none;background:var(--gray-light);border-radius:10px;padding:16px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--black)">Resultado estimado:</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+          <div style="text-align:center"><div style="font-size:10px;color:var(--gray);font-weight:600">KCAL</div><div style="font-size:20px;font-weight:700;color:var(--blue)" id="calc-res-kcal">-</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--gray);font-weight:600">PROT</div><div style="font-size:20px;font-weight:700;color:#16a34a" id="calc-res-protein">-</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--gray);font-weight:600">CARB</div><div style="font-size:20px;font-weight:700;color:#d97706" id="calc-res-carbs">-</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--gray);font-weight:600">GRAS</div><div style="font-size:20px;font-weight:700;color:#dc2626" id="calc-res-fat">-</div></div>
+        </div>
+        <button class="btn-primary" style="width:100%;font-size:13px" onclick="applyCalculatedGoals()">Usar estos valores</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeGoalsModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveGoals()">Guardar objetivos</button>
     </div>
   </div>
 </div>
@@ -1026,7 +1130,7 @@
     if (page === 'history') loadHistory();
     if (page === 'stats') loadStatsPage();
     if (page === 'photos') loadPhotos();
-    if (page === 'nutrition') { initNutritionDate(); loadNutritionLog(); }
+    if (page === 'nutrition') { initNutritionDate(); loadNutritionGoals().then(() => loadNutritionLog()); }
     if (page === 'foods') renderFoodsList();
     if (page === 'recipes') renderRecipesList();
   }
@@ -2304,6 +2408,142 @@
   document.getElementById('photo-modal').addEventListener('click', function(e) { if (e.target === this) closePhotoModal(); });
   document.getElementById('photo-view-modal').addEventListener('click', function(e) { if (e.target === this) closePhotoViewModal(); });
 
+  // ── OBJETIVOS NUTRICIONALES ──
+
+  let nutritionGoals = null;
+
+  async function loadNutritionGoals() {
+    const { data } = await db.from('nutrition_goals').select('*').eq('user_id', currentUser.id).single();
+    nutritionGoals = data || null;
+  }
+
+  function updateGoalBars(totals) {
+    if (!nutritionGoals) {
+      ['kcal','protein','carbs','fat'].forEach(k => {
+        const bar = document.getElementById('bar-'+k);
+        const goal = document.getElementById('sum-'+k+'-goal');
+        if (bar) bar.style.width = '0%';
+        if (goal) goal.textContent = k === 'kcal' ? 'kcal' : 'g';
+      });
+      return;
+    }
+    const pairs = [
+      ['kcal', totals.kcal, nutritionGoals.calories, 'var(--blue)'],
+      ['protein', totals.protein, nutritionGoals.protein, '#16a34a'],
+      ['carbs', totals.carbs, nutritionGoals.carbs, '#d97706'],
+      ['fat', totals.fat, nutritionGoals.fat, '#dc2626'],
+    ];
+    pairs.forEach(([key, val, goal, color]) => {
+      const pct = Math.min(Math.round((val / goal) * 100), 100);
+      const bar = document.getElementById('bar-'+key);
+      const goalEl = document.getElementById('sum-'+key+'-goal');
+      if (bar) { bar.style.width = pct + '%'; bar.style.background = pct >= 100 ? '#16a34a' : color; }
+      if (goalEl) goalEl.textContent = (key === 'kcal' ? `de ${goal} kcal` : `de ${goal}g`) + ` (${pct}%)`;
+    });
+  }
+
+  async function openGoalsModal() {
+    if (!nutritionGoals) await loadNutritionGoals();
+    if (nutritionGoals) {
+      document.getElementById('goal-kcal').value = nutritionGoals.calories || '';
+      document.getElementById('goal-protein').value = nutritionGoals.protein || '';
+      document.getElementById('goal-carbs').value = nutritionGoals.carbs || '';
+      document.getElementById('goal-fat').value = nutritionGoals.fat || '';
+      document.getElementById('calc-weight').value = nutritionGoals.weight || '';
+      document.getElementById('calc-height').value = nutritionGoals.height || '';
+      document.getElementById('calc-age').value = nutritionGoals.age || '';
+      if (nutritionGoals.sex) document.getElementById('calc-sex').value = nutritionGoals.sex;
+      if (nutritionGoals.activity_level) document.getElementById('calc-activity').value = nutritionGoals.activity_level;
+      if (nutritionGoals.goal_type) document.getElementById('calc-goal').value = nutritionGoals.goal_type;
+    }
+    switchGoalsTab('manual');
+    document.getElementById('calc-result').style.display = 'none';
+    document.getElementById('goals-modal').classList.add('open');
+  }
+
+  function closeGoalsModal() { document.getElementById('goals-modal').classList.remove('open'); }
+
+  function switchGoalsTab(tab) {
+    document.getElementById('goals-tab-manual').style.display = tab === 'manual' ? 'block' : 'none';
+    document.getElementById('goals-tab-calculator').style.display = tab === 'calculator' ? 'block' : 'none';
+    document.querySelectorAll('#goals-modal .tab').forEach((btn, i) => {
+      btn.classList.toggle('active', (i === 0 && tab === 'manual') || (i === 1 && tab === 'calculator'));
+    });
+  }
+
+  function calculateGoals() {
+    const weight = parseFloat(document.getElementById('calc-weight').value);
+    const height = parseFloat(document.getElementById('calc-height').value);
+    const age = parseInt(document.getElementById('calc-age').value);
+    const sex = document.getElementById('calc-sex').value;
+    const activity = parseFloat(document.getElementById('calc-activity').value);
+    const goal = document.getElementById('calc-goal').value;
+
+    if (!weight || !height || !age) { showToast('Rellena todos los campos', 'error'); return; }
+
+    // Mifflin-St Jeor
+    let bmr;
+    if (sex === 'male') bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+    else bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+
+    let tdee = Math.round(bmr * activity);
+    if (goal === 'deficit') tdee -= 300;
+    else if (goal === 'surplus') tdee += 300;
+
+    // Macros: proteína 2g/kg, grasa 25% kcal, resto carbos
+    const protein = Math.round(weight * 2);
+    const fat = Math.round((tdee * 0.25) / 9);
+    const carbs = Math.round((tdee - protein * 4 - fat * 9) / 4);
+
+    document.getElementById('calc-res-kcal').textContent = tdee;
+    document.getElementById('calc-res-protein').textContent = protein + 'g';
+    document.getElementById('calc-res-carbs').textContent = carbs + 'g';
+    document.getElementById('calc-res-fat').textContent = fat + 'g';
+    document.getElementById('calc-result').style.display = 'block';
+    document.getElementById('calc-result').dataset.kcal = tdee;
+    document.getElementById('calc-result').dataset.protein = protein;
+    document.getElementById('calc-result').dataset.carbs = carbs;
+    document.getElementById('calc-result').dataset.fat = fat;
+  }
+
+  function applyCalculatedGoals() {
+    const res = document.getElementById('calc-result');
+    document.getElementById('goal-kcal').value = res.dataset.kcal;
+    document.getElementById('goal-protein').value = res.dataset.protein;
+    document.getElementById('goal-carbs').value = res.dataset.carbs;
+    document.getElementById('goal-fat').value = res.dataset.fat;
+    switchGoalsTab('manual');
+    showToast('Valores aplicados. Guarda para confirmar.');
+  }
+
+  async function saveGoals() {
+    const calories = parseFloat(document.getElementById('goal-kcal').value);
+    const protein = parseFloat(document.getElementById('goal-protein').value);
+    const carbs = parseFloat(document.getElementById('goal-carbs').value);
+    const fat = parseFloat(document.getElementById('goal-fat').value);
+    if (!calories || !protein || !carbs || !fat) { showToast('Rellena todos los campos', 'error'); return; }
+
+    const payload = {
+      user_id: currentUser.id, calories, protein, carbs, fat,
+      weight: parseFloat(document.getElementById('calc-weight').value) || null,
+      height: parseFloat(document.getElementById('calc-height').value) || null,
+      age: parseInt(document.getElementById('calc-age').value) || null,
+      sex: document.getElementById('calc-sex').value,
+      activity_level: document.getElementById('calc-activity').value,
+      goal_type: document.getElementById('calc-goal').value,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = await db.from('nutrition_goals').upsert(payload, { onConflict: 'user_id' });
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    nutritionGoals = payload;
+    showToast('Objetivos guardados');
+    closeGoalsModal();
+    loadNutritionLog();
+  }
+
+  document.getElementById('goals-modal').addEventListener('click', function(e) { if (e.target === this) closeGoalsModal(); });
+
   // ── NUTRICIÓN ──
 
   let allFoods = [];
@@ -2346,6 +2586,7 @@
     document.getElementById('sum-protein').textContent = totalP.toFixed(1);
     document.getElementById('sum-carbs').textContent = totalC.toFixed(1);
     document.getElementById('sum-fat').textContent = totalF.toFixed(1);
+    updateGoalBars({ kcal: Math.round(totalKcal), protein: totalP, carbs: totalC, fat: totalF });
 
     const byMeal = {};
     MEAL_ORDER.forEach(m => byMeal[m] = []);
