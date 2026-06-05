@@ -19,58 +19,364 @@
       --error: #dc2626;
       --success: #16a34a;
       --border: #e5e7eb;
+      --sidebar-w: 240px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
     }
 
     body {
       font-family: 'DM Sans', sans-serif;
-      background: var(--white);
+      background: #f0f2f5;
+      color: var(--black);
       min-height: 100vh;
       display: flex;
+    }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar-logo {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--black);
+    }
+
+    .sidebar-logo h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 30px;
+      letter-spacing: 2px;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .sidebar-logo h1 span { color: var(--blue); }
+
+    .sidebar-logo p {
+      font-size: 10px;
+      color: #9ca3af;
+      margin-top: 3px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    nav { flex: 1; padding: 12px; overflow-y: auto; }
+
+    .nav-section {
+      font-size: 10px;
+      font-weight: 700;
+      color: #9ca3af;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      padding: 0 8px;
+      margin: 18px 0 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--gray);
+      transition: all 0.15s;
+      margin-bottom: 1px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover { background: var(--gray-light); color: var(--black); }
+    .nav-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+    .nav-item .icon { font-size: 15px; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 14px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--gray-light);
+    }
+
+    .user-info {
+      font-size: 11px;
+      color: var(--gray);
+      margin-bottom: 8px;
+      padding: 0 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-logout {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--gray);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-logout:hover { border-color: var(--error); color: var(--error); background: #fef2f2; }
+
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 32px 36px;
+      min-height: 100vh;
+      max-width: calc(100vw - var(--sidebar-w));
+    }
+
+    .page { display: none; animation: fadeIn 0.25s ease; }
+    .page.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 38px;
+      letter-spacing: 1.5px;
+      color: var(--black);
+      line-height: 1;
+    }
+
+    .btn-primary {
+      padding: 10px 20px;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 1px 3px rgba(26,86,219,0.3);
+    }
+
+    .btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(26,86,219,0.4); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary {
+      padding: 9px 16px;
+      background: var(--white);
+      color: var(--gray);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+
+    .btn-danger {
+      padding: 6px 12px;
+      background: none;
+      color: var(--error);
+      border: 1.5px solid #fecaca;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-danger:hover { background: #fef2f2; border-color: var(--error); }
+
+    .btn-edit {
+      padding: 6px 12px;
+      background: none;
+      color: var(--blue);
+      border: 1.5px solid #bfdbfe;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-edit:hover { background: var(--blue-light); border-color: var(--blue); }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+
+    .card:hover { box-shadow: var(--shadow-md); }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-title { font-size: 15px; font-weight: 600; color: var(--black); }
+    .card-desc { font-size: 13px; color: var(--gray); margin-top: 4px; line-height: 1.5; }
+    .card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(2px);
+      z-index: 200;
+      display: none;
       align-items: center;
       justify-content: center;
       padding: 24px;
     }
 
-    .container {
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 28px 32px;
       width: 100%;
-      max-width: 420px;
-      animation: fadeUp 0.5s ease both;
+      max-width: 480px;
+      animation: fadeUp 0.2s ease;
+      box-shadow: var(--shadow-md);
     }
 
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(16px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .logo {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .logo h1 {
+    .modal-title {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 52px;
-      letter-spacing: 2px;
+      font-size: 26px;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
       color: var(--black);
-      line-height: 1;
     }
 
-    .logo h1 span {
-      color: var(--blue);
-    }
+    .form-group { margin-bottom: 14px; }
 
-    .logo p {
-      font-size: 13px;
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
       color: var(--gray);
-      margin-top: 6px;
+      margin-bottom: 5px;
+      text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
-    .card {
-      background: var(--white);
+    input, textarea, select {
+      width: 100%;
+      padding: 10px 12px;
       border: 1.5px solid var(--border);
-      border-radius: 16px;
-      padding: 36px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--black);
+      background: var(--white);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+    }
+
+    textarea { resize: vertical; min-height: 80px; }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--gray);
+    }
+
+    .empty .empty-icon { font-size: 48px; margin-bottom: 14px; opacity: 0.6; }
+    .empty p { font-size: 15px; font-weight: 500; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--black);
+      color: var(--white);
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      pointer-events: none;
+      box-shadow: var(--shadow-md);
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--error); }
+
+    .search-bar { position: relative; margin-bottom: 18px; }
+    .search-bar input { padding-left: 38px; background: var(--white); }
+    .search-bar .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 15px;
+    }
+
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 300;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-size: 18px;
+      box-shadow: var(--shadow-sm);
     }
 
     .tabs {
@@ -78,17 +384,17 @@
       background: var(--gray-light);
       border-radius: 10px;
       padding: 4px;
-      margin-bottom: 28px;
+      margin-bottom: 20px;
     }
 
     .tab {
       flex: 1;
-      padding: 10px;
+      padding: 9px;
       border: none;
       background: none;
-      border-radius: 8px;
+      border-radius: 7px;
       font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 500;
       color: var(--gray);
       cursor: pointer;
@@ -98,153 +404,698 @@
     .tab.active {
       background: var(--white);
       color: var(--black);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    }
-
-    .form-group {
-      margin-bottom: 18px;
-    }
-
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--black);
-      margin-bottom: 7px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      color: var(--black);
-      background: var(--white);
-      transition: border-color 0.2s;
-      outline: none;
-    }
-
-    input:focus {
-      border-color: var(--blue);
-    }
-
-    input::placeholder {
-      color: #c0c4cc;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--blue);
-      color: var(--white);
-      border: none;
-      border-radius: 10px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
+      box-shadow: var(--shadow-sm);
       font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-      margin-top: 8px;
     }
 
-    .btn:hover { background: var(--blue-dark); }
-    .btn:active { transform: scale(0.98); }
-    .btn:disabled { background: #93aee8; cursor: not-allowed; }
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+      }
 
-    .message {
-      margin-top: 16px;
-      padding: 12px 14px;
-      border-radius: 8px;
-      font-size: 14px;
-      display: none;
+      .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-md); }
+      .hamburger { display: block; }
+
+      .main {
+        margin-left: 0;
+        padding: 16px;
+        padding-top: 58px;
+        max-width: 100vw;
+      }
+
+      .page-title { font-size: 30px; }
     }
-
-    .message.error {
-      background: #fef2f2;
-      color: var(--error);
-      border: 1px solid #fecaca;
-      display: block;
-    }
-
-    .message.success {
-      background: #f0fdf4;
-      color: var(--success);
-      border: 1px solid #bbf7d0;
-      display: block;
-    }
-
-    .panel { display: none; }
-    .panel.active { display: block; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="logo">
+<button class="hamburger" onclick="toggleSidebar()">☰</button>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
     <h1>GRIT<span>&</span>GAIN</h1>
-    <p>Registra tu progreso. Supera tus límites.</p>
+    <p id="sidebar-quote" style="font-size:10px;color:#9ca3af;margin-top:4px;font-style:italic;line-height:1.4"></p>
+  </div>
+  <nav>
+    <div class="nav-section">Principal</div>
+    <button class="nav-item active" onclick="navigate('exercises')">
+      <span class="icon">💪</span> Ejercicios
+    </button>
+    <button class="nav-item" onclick="navigate('circuits')">
+      <span class="icon">🔄</span> Circuitos
+    </button>
+    <button class="nav-item" onclick="navigate('routines')">
+      <span class="icon">📋</span> Rutinas
+    </button>
+
+    <div class="nav-section">Entrenamiento</div>
+    <button class="nav-item" onclick="navigate('workout')">
+      <span class="icon">🏋️</span> Entrenar hoy
+    </button>
+    <button class="nav-item" onclick="navigate('history')">
+      <span class="icon">📅</span> Historial
+    </button>
+
+    <div class="nav-section">Progreso</div>
+    <button class="nav-item" onclick="navigate('stats')">
+      <span class="icon">📊</span> Estadísticas
+    </button>
+    <button class="nav-item" onclick="navigate('photos')">
+      <span class="icon">📸</span> Fotos
+    </button>
+
+    <div class="nav-section">Nutrición</div>
+    <button class="nav-item" onclick="navigate('nutrition')">
+      <span class="icon">🥗</span> Registro diario
+    </button>
+    <button class="nav-item" onclick="navigate('foods')">
+      <span class="icon">🍎</span> Alimentos
+    </button>
+    <button class="nav-item" onclick="navigate('recipes')">
+      <span class="icon">📖</span> Recetas
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info" id="user-email"></div>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- EJERCICIOS -->
+  <div class="page active" id="page-exercises">
+    <div class="page-header">
+      <h2 class="page-title">Ejercicios</h2>
+      <button class="btn-primary" onclick="openExerciseModal()">+ Nuevo ejercicio</button>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Buscar ejercicio..." oninput="filterExercises(this.value)">
+    </div>
+    <div id="exercises-list"></div>
   </div>
 
-  <div class="card">
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('login')">Iniciar sesión</button>
-      <button class="tab" onclick="switchTab('register')">Registrarse</button>
+  <!-- OTRAS PÁGINAS -->
+  <div class="page" id="page-circuits">
+    <div class="page-header">
+      <h2 class="page-title">Circuitos</h2>
+      <button class="btn-primary" onclick="openCircuitModal()">+ Nuevo circuito</button>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Buscar circuito..." oninput="filterCircuits(this.value)">
+    </div>
+    <div id="circuits-list"></div>
+  </div>
+  <div class="page" id="page-routines">
+    <div class="page-header">
+      <h2 class="page-title">Rutinas</h2>
+      <button class="btn-primary" onclick="openRoutineModal()">+ Nueva rutina</button>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Buscar rutina..." oninput="filterRoutines(this.value)">
+    </div>
+    <div id="routines-list"></div>
+  </div>
+  <div class="page" id="page-workout">
+    <div class="page-header">
+      <h2 class="page-title">Entrenar hoy</h2>
+      <div style="font-size:13px;color:var(--gray)" id="workout-date"></div>
     </div>
 
-    <!-- LOGIN -->
-    <div class="panel active" id="panel-login">
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="login-email" placeholder="tu@email.com">
+    <!-- PASO 1: elegir tipo -->
+    <div id="workout-step1">
+      <div id="workout-quote-banner" style="background:var(--black);color:var(--white);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:14px;font-style:italic;line-height:1.5;display:none"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:500px">
+        <div class="card" style="cursor:pointer;text-align:center;padding:28px 16px" onclick="startWorkout('routine')">
+          <div style="font-size:32px;margin-bottom:10px">📋</div>
+          <div style="font-weight:600;font-size:15px">Usar rutina</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:4px">Elige una sesión preestablecida</div>
+        </div>
+        <div class="card" style="cursor:pointer;text-align:center;padding:28px 16px" onclick="startWorkout('free')">
+          <div style="font-size:32px;margin-bottom:10px">🆓</div>
+          <div style="font-weight:600;font-size:15px">Entrenamiento libre</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:4px">Sin rutina preestablecida</div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="login-password" placeholder="••••••••">
-      </div>
-      <button class="btn" onclick="login()">Entrar</button>
-      <div class="message" id="login-msg"></div>
     </div>
 
-    <!-- INVITE -->
-    <div class="panel" id="invite-panel">
-      <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:28px;margin-bottom:8px">🔐</div>
-        <div style="font-weight:600;font-size:16px">Establece tu contraseña</div>
-        <div style="font-size:13px;color:#6b7280;margin-top:4px">Has sido invitado. Elige una contraseña para acceder.</div>
+    <!-- PASO 2: elegir sesión de rutina -->
+    <div id="workout-step2" style="display:none;max-width:600px">
+      <div class="card">
+        <div class="form-group">
+          <label>Rutina</label>
+          <select id="wo-routine-select" onchange="loadRoutineSessions()">
+            <option value="">-- Selecciona rutina --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Sesión</label>
+          <select id="wo-session-select">
+            <option value="">-- Selecciona sesión --</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn-secondary" onclick="workoutBack()">Atrás</button>
+          <button class="btn-primary" onclick="loadWorkoutSession()">Empezar sesión</button>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="invite-password" placeholder="Mínimo 6 caracteres">
-      </div>
-      <div class="form-group">
-        <label>Repetir contraseña</label>
-        <input type="password" id="invite-password2" placeholder="••••••••">
-      </div>
-      <button class="btn" onclick="setInvitePassword()">Establecer contraseña</button>
-      <div class="message" id="invite-msg"></div>
     </div>
 
-    <!-- REGISTER -->
-    <div class="panel" id="panel-register">
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="reg-email" placeholder="tu@email.com">
+    <!-- PASO 3: sesión en curso -->
+    <div id="workout-step3" style="display:none;max-width:700px">
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;color:var(--gray)">Sesión activa</div>
+            <div style="font-weight:600;font-size:16px" id="wo-session-name">Entrenamiento libre</div>
+          </div>
+          <button class="btn-secondary" onclick="workoutBack()">Cambiar sesión</button>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres">
+
+      <!-- Ejercicios del entrenamiento -->
+      <div id="wo-exercises-container"></div>
+
+      <!-- Añadir ejercicio libre -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px">➕ Añadir ejercicio</div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center">
+          <select id="wo-add-exercise-select">
+            <option value="">-- Selecciona ejercicio --</option>
+          </select>
+          <button class="btn-primary" onclick="addWorkoutExercise()">Añadir</button>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Repetir contraseña</label>
-        <input type="password" id="reg-password2" placeholder="••••••••">
+
+      <!-- Añadir circuito -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px">🔄 Añadir circuito</div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:10px">
+          <select id="wo-add-circuit-select">
+            <option value="">-- Selecciona circuito guardado --</option>
+          </select>
+          <button class="btn-primary" onclick="addWorkoutCircuit()">Añadir</button>
+        </div>
       </div>
-      <button class="btn" onclick="register()">Crear cuenta</button>
-      <div class="message" id="reg-msg"></div>
+
+      <!-- Notas de sesión -->
+      <div class="card" style="margin-bottom:16px">
+        <label style="margin-bottom:8px;display:block;font-weight:600">Notas de la sesión</label>
+        <textarea id="wo-notes" placeholder="Cómo te has sentido, observaciones..." style="min-height:70px"></textarea>
+      </div>
+
+      <button class="btn-primary" style="width:100%;padding:14px;font-size:16px" onclick="saveWorkout()">💾 Guardar entrenamiento</button>
+    </div>
+  </div>
+  <div class="page" id="page-history">
+    <div class="page-header">
+      <h2 class="page-title">Historial</h2>
+    </div>
+    <div id="history-quote" style="background:var(--gray-light);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:10px 16px;margin-bottom:20px;font-size:13px;color:var(--gray);font-style:italic"></div>
+    <!-- Lista de entrenamientos -->
+    <div id="history-list-view">
+      <div id="history-list"></div>
+    </div>
+    <!-- Detalle de un entrenamiento -->
+    <div id="history-detail-view" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="btn-secondary" onclick="backToHistoryList()">← Volver</button>
+        <div>
+          <div style="font-size:18px;font-weight:600" id="history-detail-date"></div>
+          <div style="font-size:13px;color:var(--gray)" id="history-detail-session"></div>
+        </div>
+        <button class="btn-danger" style="margin-left:auto" onclick="deleteWorkout()">Eliminar</button>
+      </div>
+      <div id="history-detail-content"></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-stats">
+    <div class="page-header"><h2 class="page-title">Estadísticas</h2></div>
+    <div class="form-group" style="max-width:400px">
+      <label>Selecciona un ejercicio</label>
+      <select id="stats-exercise-select" onchange="loadExerciseStats()">
+        <option value="">-- Ejercicio --</option>
+      </select>
+    </div>
+    <div id="stats-content"></div>
+  </div>
+  <div class="page" id="page-photos">
+    <div class="page-header">
+      <h2 class="page-title">Fotos de progreso</h2>
+      <button class="btn-primary" onclick="openPhotoModal()">+ Añadir foto</button>
+    </div>
+    <div id="photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px"></div>
+  </div>
+
+  <!-- NUTRICIÓN: REGISTRO DIARIO -->
+  <div class="page" id="page-nutrition">
+    <div class="page-header">
+      <h2 class="page-title">Registro diario</h2>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="date" id="nutrition-date" onchange="loadNutritionLog()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+        <button class="btn-primary" onclick="openAddFoodModal()">+ Añadir</button>
+      </div>
+    </div>
+    <!-- Resumen macros -->
+    <div id="nutrition-summary" style="margin-bottom:20px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px">
+        <div style="background:var(--blue-light);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:11px;font-weight:600;color:var(--gray)">CALORÍAS</div>
+          <div style="font-size:26px;font-weight:700;color:var(--blue)" id="sum-kcal">0</div>
+          <div style="font-size:11px;color:var(--gray)" id="sum-kcal-goal">kcal</div>
+          <div style="background:#dbeafe;border-radius:4px;height:5px;margin-top:6px;overflow:hidden"><div id="bar-kcal" style="height:100%;background:var(--blue);border-radius:4px;width:0%;transition:width 0.4s"></div></div>
+        </div>
+        <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:11px;font-weight:600;color:var(--gray)">PROTEÍNA</div>
+          <div style="font-size:26px;font-weight:700;color:#16a34a" id="sum-protein">0</div>
+          <div style="font-size:11px;color:var(--gray)" id="sum-protein-goal">g</div>
+          <div style="background:#dcfce7;border-radius:4px;height:5px;margin-top:6px;overflow:hidden"><div id="bar-protein" style="height:100%;background:#16a34a;border-radius:4px;width:0%;transition:width 0.4s"></div></div>
+        </div>
+        <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:11px;font-weight:600;color:var(--gray)">CARBOS</div>
+          <div style="font-size:26px;font-weight:700;color:#d97706" id="sum-carbs">0</div>
+          <div style="font-size:11px;color:var(--gray)" id="sum-carbs-goal">g</div>
+          <div style="background:#fef3c7;border-radius:4px;height:5px;margin-top:6px;overflow:hidden"><div id="bar-carbs" style="height:100%;background:#d97706;border-radius:4px;width:0%;transition:width 0.4s"></div></div>
+        </div>
+        <div style="background:var(--gray-light);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:11px;font-weight:600;color:var(--gray)">GRASA</div>
+          <div style="font-size:26px;font-weight:700;color:#dc2626" id="sum-fat">0</div>
+          <div style="font-size:11px;color:var(--gray)" id="sum-fat-goal">g</div>
+          <div style="background:#fee2e2;border-radius:4px;height:5px;margin-top:6px;overflow:hidden"><div id="bar-fat" style="height:100%;background:#dc2626;border-radius:4px;width:0%;transition:width 0.4s"></div></div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="openGoalsModal()">🎯 Configurar objetivos</button>
+      </div>
+    </div>
+    <!-- Comidas por tipo -->
+    <div id="nutrition-meals"></div>
+  </div>
+
+  <!-- NUTRICIÓN: ALIMENTOS -->
+  <div class="page" id="page-foods">
+    <div class="page-header">
+      <h2 class="page-title">Alimentos</h2>
+      <button class="btn-primary" onclick="openFoodModal()">+ Nuevo alimento</button>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Buscar alimento..." oninput="filterFoods(this.value)">
+    </div>
+    <div id="foods-list"></div>
+  </div>
+
+  <!-- NUTRICIÓN: RECETAS -->
+  <div class="page" id="page-recipes">
+    <div class="page-header">
+      <h2 class="page-title">Recetas</h2>
+      <button class="btn-primary" onclick="openRecipeModal()">+ Nueva receta</button>
+    </div>
+    <div id="recipes-list"></div>
+  </div>
+
+</main>
+
+<!-- MODAL EJERCICIO -->
+<div class="modal-overlay" id="exercise-modal">
+  <div class="modal">
+    <div class="modal-title" id="exercise-modal-title">Nuevo ejercicio</div>
+    <div class="form-group">
+      <label>Nombre *</label>
+      <input type="text" id="ex-name" placeholder="Ej: Press banca">
+    </div>
+    <div class="form-group">
+      <label>Descripción</label>
+      <textarea id="ex-desc" placeholder="Descripción del ejercicio..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="ex-notes" placeholder="Notas personales, tips..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeExerciseModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveExercise()">Guardar</button>
     </div>
   </div>
 </div>
+
+<!-- MODAL OBJETIVOS NUTRICIONALES -->
+<div class="modal-overlay" id="goals-modal">
+  <div class="modal" style="max-width:540px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">Objetivos nutricionales</div>
+    <div class="tabs" style="margin-bottom:20px">
+      <button class="tab active" onclick="switchGoalsTab('manual')">Manual</button>
+      <button class="tab" onclick="switchGoalsTab('calculator')">Calculadora</button>
+    </div>
+
+    <!-- Manual -->
+    <div id="goals-tab-manual">
+      <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Define directamente tus objetivos diarios.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>Calorías (kcal) *</label>
+          <input type="number" id="goal-kcal" min="0" placeholder="Ej: 2200">
+        </div>
+        <div class="form-group">
+          <label>Proteína (g) *</label>
+          <input type="number" id="goal-protein" min="0" placeholder="Ej: 160">
+        </div>
+        <div class="form-group">
+          <label>Carbohidratos (g) *</label>
+          <input type="number" id="goal-carbs" min="0" placeholder="Ej: 250">
+        </div>
+        <div class="form-group">
+          <label>Grasa (g) *</label>
+          <input type="number" id="goal-fat" min="0" placeholder="Ej: 70">
+        </div>
+      </div>
+    </div>
+
+    <!-- Calculadora -->
+    <div id="goals-tab-calculator" style="display:none">
+      <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Calcula tus necesidades según tus datos.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>Peso (kg)</label>
+          <input type="number" id="calc-weight" min="30" max="300" step="0.1" placeholder="Ej: 80">
+        </div>
+        <div class="form-group">
+          <label>Altura (cm)</label>
+          <input type="number" id="calc-height" min="100" max="250" placeholder="Ej: 178">
+        </div>
+        <div class="form-group">
+          <label>Edad</label>
+          <input type="number" id="calc-age" min="10" max="100" placeholder="Ej: 30">
+        </div>
+        <div class="form-group">
+          <label>Sexo</label>
+          <select id="calc-sex">
+            <option value="male">Hombre</option>
+            <option value="female">Mujer</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nivel de actividad</label>
+        <select id="calc-activity">
+          <option value="1.2">Sedentario (poco o nada de ejercicio)</option>
+          <option value="1.375">Ligero (1-3 días/semana)</option>
+          <option value="1.55" selected>Moderado (3-5 días/semana)</option>
+          <option value="1.725">Activo (6-7 días/semana)</option>
+          <option value="1.9">Muy activo (2 veces al día)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Objetivo</label>
+        <select id="calc-goal">
+          <option value="deficit">Perder grasa (déficit -300 kcal)</option>
+          <option value="maintain" selected>Mantenimiento</option>
+          <option value="surplus">Ganar músculo (superávit +300 kcal)</option>
+        </select>
+      </div>
+      <button class="btn-secondary" style="width:100%;margin-bottom:16px" onclick="calculateGoals()">⚡ Calcular</button>
+      <!-- Resultado calculadora -->
+      <div id="calc-result" style="display:none;background:var(--gray-light);border-radius:10px;padding:16px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--black)">Resultado estimado:</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+          <div style="text-align:center"><div style="font-size:10px;color:var(--gray);font-weight:600">KCAL</div><div style="font-size:20px;font-weight:700;color:var(--blue)" id="calc-res-kcal">-</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--gray);font-weight:600">PROT</div><div style="font-size:20px;font-weight:700;color:#16a34a" id="calc-res-protein">-</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--gray);font-weight:600">CARB</div><div style="font-size:20px;font-weight:700;color:#d97706" id="calc-res-carbs">-</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--gray);font-weight:600">GRAS</div><div style="font-size:20px;font-weight:700;color:#dc2626" id="calc-res-fat">-</div></div>
+        </div>
+        <button class="btn-primary" style="width:100%;font-size:13px" onclick="applyCalculatedGoals()">Usar estos valores</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeGoalsModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveGoals()">Guardar objetivos</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AÑADIR COMIDA -->
+<div class="modal-overlay" id="add-food-modal">
+  <div class="modal" style="max-width:540px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">Añadir al registro</div>
+    <div class="form-group">
+      <label>Comida</label>
+      <select id="add-food-meal-type">
+        <option value="desayuno">Desayuno</option>
+        <option value="almuerzo">Almuerzo</option>
+        <option value="comida">Comida</option>
+        <option value="merienda">Merienda</option>
+        <option value="cena">Cena</option>
+        <option value="snack">Snack</option>
+      </select>
+    </div>
+    <!-- Tabs -->
+    <div class="tabs" style="margin-bottom:16px">
+      <button class="tab active" onclick="switchAddFoodTab('search')">Buscar</button>
+      <button class="tab" onclick="switchAddFoodTab('my')">Mis alimentos</button>
+      <button class="tab" onclick="switchAddFoodTab('recipe')">Recetas</button>
+    </div>
+    <!-- Buscar en OFF -->
+    <div id="add-tab-search">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input type="text" id="off-search-input" placeholder="Buscar en base de datos..." style="flex:1" onkeydown="if(event.key==='Enter')searchOFF()">
+        <button class="btn-primary" onclick="searchOFF()">Buscar</button>
+      </div>
+      <div id="off-results" style="max-height:200px;overflow-y:auto"></div>
+    </div>
+    <!-- Mis alimentos -->
+    <div id="add-tab-my" style="display:none">
+      <div id="my-foods-select-list" style="max-height:200px;overflow-y:auto"></div>
+    </div>
+    <!-- Recetas -->
+    <div id="add-tab-recipe" style="display:none">
+      <div id="my-recipes-select-list" style="max-height:200px;overflow-y:auto"></div>
+    </div>
+    <!-- Alimento seleccionado -->
+    <div id="add-food-selected" style="display:none;margin-top:16px">
+      <div style="background:var(--blue-light);border-radius:8px;padding:12px;margin-bottom:12px">
+        <div style="font-weight:600" id="add-food-selected-name"></div>
+        <div style="font-size:12px;color:var(--gray);margin-top:4px" id="add-food-selected-macros"></div>
+      </div>
+      <div class="form-group">
+        <label>Cantidad (g)</label>
+        <input type="number" id="add-food-amount" placeholder="100" min="1" oninput="updateAddFoodMacros()">
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px" id="add-food-macro-preview"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAddFoodModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveNutritionLog()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ALIMENTO PROPIO -->
+<div class="modal-overlay" id="food-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title" id="food-modal-title">Nuevo alimento</div>
+    <div style="font-size:12px;color:var(--gray);margin-bottom:16px">Valores por 100g</div>
+    <div class="form-group">
+      <label>Nombre *</label>
+      <input type="text" id="food-name" placeholder="Ej: Pechuga de pollo">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label>Calorías (kcal) *</label>
+        <input type="number" id="food-calories" min="0" step="0.1">
+      </div>
+      <div class="form-group">
+        <label>Proteína (g)</label>
+        <input type="number" id="food-protein" min="0" step="0.1">
+      </div>
+      <div class="form-group">
+        <label>Carbohidratos (g)</label>
+        <input type="number" id="food-carbs" min="0" step="0.1">
+      </div>
+      <div class="form-group">
+        <label>Grasa (g)</label>
+        <input type="number" id="food-fat" min="0" step="0.1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="food-notes" placeholder="Marca, preparación..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeFoodModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveFood()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECETA -->
+<div class="modal-overlay" id="recipe-modal">
+  <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title" id="recipe-modal-title">Nueva receta</div>
+    <div class="form-group">
+      <label>Nombre *</label>
+      <input type="text" id="recipe-name" placeholder="Ej: Tortilla de avena">
+    </div>
+    <div class="form-group">
+      <label>Gramos totales de la receta</label>
+      <input type="number" id="recipe-grams" placeholder="Ej: 300" min="1">
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="recipe-notes" placeholder="Instrucciones, consejos..."></textarea>
+    </div>
+    <div style="margin:8px 0 10px;font-size:14px;font-weight:600">Ingredientes</div>
+    <div id="recipe-ingredient-rows"></div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input type="text" id="recipe-ing-search" placeholder="Buscar ingrediente..." style="flex:1" oninput="searchRecipeIngredient(this.value)">
+    </div>
+    <div id="recipe-ing-results" style="max-height:150px;overflow-y:auto;margin-bottom:12px"></div>
+    <div id="recipe-macro-preview" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRecipeModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveRecipe()">Guardar receta</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FOTO -->
+<div class="modal-overlay" id="photo-modal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-title" id="photo-modal-title">Añadir foto</div>
+    <div class="form-group">
+      <label>Fecha *</label>
+      <input type="date" id="photo-date">
+    </div>
+    <div class="form-group">
+      <label>Peso corporal (kg)</label>
+      <input type="number" id="photo-weight" placeholder="Ej: 80.5" min="0" step="0.1">
+    </div>
+    <div class="form-group">
+      <label>Foto *</label>
+      <input type="file" id="photo-file" accept="image/*" style="padding:8px">
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="photo-notes" placeholder="Observaciones..."></textarea>
+    </div>
+    <div id="photo-preview" style="display:none;margin-bottom:12px">
+      <img id="photo-preview-img" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closePhotoModal()">Cancelar</button>
+      <button class="btn-primary" id="photo-save-btn" onclick="savePhoto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER FOTO -->
+<div class="modal-overlay" id="photo-view-modal">
+  <div class="modal" style="max-width:500px;padding:20px">
+    <img id="photo-view-img" style="width:100%;border-radius:8px;max-height:60vh;object-fit:contain;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:600" id="photo-view-date"></div>
+        <div style="font-size:13px;color:var(--gray)" id="photo-view-weight"></div>
+        <div style="font-size:13px;color:var(--gray);margin-top:4px" id="photo-view-notes"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-danger" onclick="deletePhoto()">Eliminar</button>
+        <button class="btn-secondary" onclick="closePhotoViewModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RUTINA -->
+<div class="modal-overlay" id="routine-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title" id="routine-modal-title">Nueva rutina</div>
+    <div class="form-group">
+      <label>Nombre *</label>
+      <input type="text" id="rout-name" placeholder="Ej: Fuerza 4 días">
+    </div>
+    <div class="form-group">
+      <label>Descripción</label>
+      <textarea id="rout-desc" placeholder="Descripción de la rutina..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRoutineModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveRoutine()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SESIÓN -->
+<div class="modal-overlay" id="session-modal">
+  <div class="modal" style="max-width:620px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title" id="session-modal-title">Nueva sesión</div>
+    <div class="form-group">
+      <label>Nombre de la sesión *</label>
+      <input type="text" id="sess-name" placeholder="Ej: Día A - Pecho y tríceps">
+    </div>
+
+    <div style="margin:16px 0 10px;font-size:14px;font-weight:600;color:var(--black)">Ejercicios</div>
+    <div id="session-exercise-rows"></div>
+    <button class="btn-secondary" style="width:100%;margin-bottom:16px" onclick="addSessionExerciseRow()">+ Añadir ejercicio</button>
+
+    <div style="margin:4px 0 10px;font-size:14px;font-weight:600;color:var(--black)">Circuitos</div>
+    <div id="session-circuit-rows"></div>
+    <button class="btn-secondary" style="width:100%;margin-bottom:8px" onclick="addSessionCircuitRow()">+ Añadir circuito</button>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeSessionModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveSession()">Guardar sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CIRCUITO -->
+<div class="modal-overlay" id="circuit-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title" id="circuit-modal-title">Nuevo circuito</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label>Nombre *</label>
+        <input type="text" id="circ-name" placeholder="Ej: Circuito quema">
+      </div>
+      <div class="form-group">
+        <label>Tipo *</label>
+        <select id="circ-type">
+          <option value="amrap">AMRAP</option>
+          <option value="tabata">Tabata</option>
+          <option value="emom">EMOM</option>
+          <option value="rondas">Rondas fijas</option>
+          <option value="libre">Libre</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="circ-notes" placeholder="Descripción, instrucciones..."></textarea>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <label style="margin:0;font-size:14px;font-weight:600">Ejercicios del circuito</label>
+        <button class="btn-secondary" onclick="addCircuitExerciseRow()">+ Añadir</button>
+      </div>
+      <div id="circuit-exercises-rows"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeCircuitModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveCircuit()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -252,108 +1103,2043 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZscHNwemNrdnFtaW9pcnV5dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjYwNTYsImV4cCI6MjA5NTMwMjA1Nn0.JU4k-YAzJ03ACbMHJib8sLALQCvJXq1no7-m045prMs';
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Gestionar token de invitación o sesión activa
-  async function handleInviteToken() {
-    const hash = window.location.hash;
-    const params = new URLSearchParams(hash.replace('#', '?'));
-    const accessToken = params.get('access_token');
-    const type = params.get('type');
+  let currentUser = null;
+  let allExercises = [];
+  let editingExerciseId = null;
 
-    if (accessToken && (type === 'invite' || type === 'recovery')) {
-      const { error } = await db.auth.setSession({ access_token: accessToken, refresh_token: params.get('refresh_token') || '' });
-      if (!error) {
-        document.getElementById('panel-login').classList.remove('active');
-        document.getElementById('invite-panel').classList.add('active');
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        return;
+  // INIT
+  async function init() {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+    currentUser = session.user;
+    document.getElementById('user-email').textContent = currentUser.email;
+    loadExercises();
+    initQuotes();
+  }
+
+  // NAVEGACIÓN
+  function navigate(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+    if (page === 'circuits') loadCircuits();
+    if (page === 'routines') { loadExercises(); loadCircuits(); loadRoutines(); }
+    if (page === 'workout') initWorkoutPage();
+    if (page === 'history') loadHistory();
+    if (page === 'stats') loadStatsPage();
+    if (page === 'photos') loadPhotos();
+    if (page === 'nutrition') { initNutritionDate(); loadNutritionGoals().then(() => loadNutritionLog()); }
+    if (page === 'foods') renderFoodsList();
+    if (page === 'recipes') renderRecipesList();
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  // LOGOUT
+  async function logout() {
+    await db.auth.signOut();
+    window.location.href = 'index.html';
+  }
+
+  // TOAST
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.className = 'toast', 2800);
+  }
+
+  // ── EJERCICIOS ──
+
+  async function loadExercises() {
+    const { data, error } = await db
+      .from('exercises')
+      .select('*')
+      .order('name');
+    if (error) { showToast('Error al cargar ejercicios', 'error'); return; }
+    allExercises = data || [];
+    renderExercises(allExercises);
+  }
+
+  function renderExercises(list) {
+    const container = document.getElementById('exercises-list');
+    if (list.length === 0) {
+      container.innerHTML = `<div class="empty"><div class="empty-icon">💪</div><p>Sin ejercicios. Los débiles descansan.</p><small>Añade el primero y empieza a construir tu arsenal.</small></div>`;
+      return;
+    }
+    container.innerHTML = list.map(ex => `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">${escapeHtml(ex.name)}</div>
+            ${ex.description ? `<div class="card-desc">${escapeHtml(ex.description)}</div>` : ''}
+            ${ex.notes ? `<div class="card-desc" style="margin-top:6px;color:#1a56db">📝 ${escapeHtml(ex.notes)}</div>` : ''}
+          </div>
+          <div class="card-actions">
+            <button class="btn-edit" onclick="editExercise('${ex.id}')">Editar</button>
+            <button class="btn-danger" onclick="deleteExercise('${ex.id}')">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function filterExercises(query) {
+    const q = query.toLowerCase();
+    renderExercises(allExercises.filter(ex => ex.name.toLowerCase().includes(q)));
+  }
+
+  function openExerciseModal(id = null) {
+    editingExerciseId = id;
+    document.getElementById('exercise-modal-title').textContent = id ? 'Editar ejercicio' : 'Nuevo ejercicio';
+    if (id) {
+      const ex = allExercises.find(e => e.id === id);
+      document.getElementById('ex-name').value = ex.name || '';
+      document.getElementById('ex-desc').value = ex.description || '';
+      document.getElementById('ex-notes').value = ex.notes || '';
+    } else {
+      document.getElementById('ex-name').value = '';
+      document.getElementById('ex-desc').value = '';
+      document.getElementById('ex-notes').value = '';
+    }
+    document.getElementById('exercise-modal').classList.add('open');
+    setTimeout(() => document.getElementById('ex-name').focus(), 100);
+  }
+
+  function closeExerciseModal() {
+    document.getElementById('exercise-modal').classList.remove('open');
+    editingExerciseId = null;
+  }
+
+  function editExercise(id) { openExerciseModal(id); }
+
+  async function saveExercise() {
+    const name = document.getElementById('ex-name').value.trim();
+    if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+    const payload = {
+      name,
+      description: document.getElementById('ex-desc').value.trim() || null,
+      notes: document.getElementById('ex-notes').value.trim() || null,
+      user_id: currentUser.id
+    };
+
+    let error;
+    if (editingExerciseId) {
+      ({ error } = await db.from('exercises').update(payload).eq('id', editingExerciseId));
+    } else {
+      ({ error } = await db.from('exercises').insert(payload));
+    }
+
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    showToast(editingExerciseId ? 'Ejercicio actualizado' : 'Ejercicio creado');
+    closeExerciseModal();
+    loadExercises();
+  }
+
+  async function deleteExercise(id) {
+    if (!confirm('¿Eliminar este ejercicio?')) return;
+    const { error } = await db.from('exercises').delete().eq('id', id);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Ejercicio eliminado');
+    loadExercises();
+  }
+
+  // Cerrar modal al hacer clic fuera
+  document.getElementById('exercise-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeExerciseModal();
+  });
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+
+  // ── FRASES MOTIVADORAS ──
+
+  const QUOTES = [
+    "El dolor que sientes hoy es la fuerza que sentirás mañana.",
+    "No entrenas para ganar. Entrenas para no perder nunca.",
+    "Cada serie es una orden. Ejecútala.",
+    "El que para, retrocede. Tú no paras.",
+    "La disciplina no negocia. Tú tampoco.",
+    "El cuerpo grita parar. La mente dice una más.",
+    "No hay atajos. Solo trabajo y más trabajo.",
+    "El que madruga entrena. El que no, se queda atrás.",
+    "Sudor ahora. Victoria después.",
+    "No busques motivación. Busca disciplina.",
+    "El hierro no miente. Los resultados tampoco.",
+    "Cada repetición cuenta. Hazla como si fuera la última.",
+    "La fuerza no se pide. Se construye.",
+    "Aquí no hay excusas. Solo resultados.",
+    "Lo fácil no te hace mejor. Lo difícil, sí.",
+    "Entrena como si tu vida dependiera de ello.",
+    "El límite está en tu cabeza. Rómpelo.",
+    "Nadie recordará tus excusas. Sí tus marcas.",
+    "Un día más sin entrenar es un día regalado a tu rival.",
+    "La rutina es tu arma. Afílala cada día.",
+  ];
+
+  const WORKOUT_START_QUOTES = [
+    "🔫 Carga el arma. Es hora de trabajar.",
+    "⚔️ Sin cuartel. Sin excusas. Empieza.",
+    "🚨 Alerta máxima. El hierro no espera.",
+    "💣 Hoy no hay piedad. Ni contigo mismo.",
+    "🦁 Los leones no descansan cuando tienen hambre.",
+    "🔒 La sesión está bloqueada. Solo hay una salida: acabarla.",
+    "🚔 Detén todas las excusas. Operación en curso.",
+    "⚡ Descarga todo lo que tienes. Ahora.",
+  ];
+
+  const WORKOUT_SAVE_QUOTES = [
+    "✅ Misión completada. Descansa como un soldado.",
+    "🏆 Otro día en el campo. Bien hecho.",
+    "💪 Registrado. El hierro recuerda lo que hiciste.",
+    "🔒 Sesión archivada. Mañana más.",
+    "⚔️ Batalla ganada. La guerra continúa.",
+    "📋 Parte de operaciones guardado. Buen trabajo, agente.",
+  ];
+
+  const HISTORY_QUOTES = [
+    "Cada entrada es una prueba de que estuviste aquí.",
+    "Tu historial no miente. ¿Estás satisfecho?",
+    "Los números no tienen ego. Solo verdad.",
+    "Mira atrás para saber cuánto has avanzado.",
+    "El pasado entrena. El presente ejecuta. El futuro premia.",
+  ];
+
+  function getQuoteOfDay(arr) {
+    const day = Math.floor(Date.now() / 86400000);
+    return arr[day % arr.length];
+  }
+
+  function getRandomQuote(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function initQuotes() {
+    const sidebarQ = document.getElementById('sidebar-quote');
+    if (sidebarQ) sidebarQ.textContent = '"' + getQuoteOfDay(QUOTES) + '"';
+  }
+
+  function showWorkoutStartQuote() {
+    const banner = document.getElementById('workout-quote-banner');
+    if (!banner) return;
+    banner.textContent = getRandomQuote(WORKOUT_START_QUOTES);
+    banner.style.display = 'block';
+    setTimeout(() => { banner.style.display = 'none'; }, 4000);
+  }
+
+  function showHistoryQuote() {
+    const el = document.getElementById('history-quote');
+    if (el) el.textContent = '"' + getQuoteOfDay(HISTORY_QUOTES) + '"';
+  }
+
+  init();
+
+  // ── CIRCUITOS ──
+
+  let allCircuits = [];
+  let editingCircuitId = null;
+  let circuitExerciseRows = [];
+
+  async function loadCircuits() {
+    const { data, error } = await db
+      .from('circuits')
+      .select('*, circuit_exercises(*, exercises(name))')
+      .order('name');
+    if (error) { showToast('Error al cargar circuitos', 'error'); return; }
+    allCircuits = data || [];
+    renderCircuits(allCircuits);
+  }
+
+  const CIRCUIT_TYPE_LABELS = {
+    amrap: 'AMRAP', tabata: 'Tabata', emom: 'EMOM', rondas: 'Rondas fijas', libre: 'Libre'
+  };
+
+  const CIRCUIT_TYPE_COLORS = {
+    amrap: '#dc2626', tabata: '#7c3aed', emom: '#0891b2', rondas: '#16a34a', libre: '#6b7280'
+  };
+
+  function renderCircuits(list) {
+    const container = document.getElementById('circuits-list');
+    if (list.length === 0) {
+      container.innerHTML = `<div class="empty"><div class="empty-icon">🔄</div><p>Sin circuitos. El dolor es temporal.</p><small>Crea tu primer circuito y dale caña.</small></div>`;
+      return;
+    }
+    container.innerHTML = list.map(c => {
+      const exList = (c.circuit_exercises || [])
+        .sort((a,b) => a.order_index - b.order_index)
+        .map(ce => {
+          let detail = ce.exercises?.name || '';
+          if (ce.reps) detail += ` · ${ce.reps} reps`;
+          if (ce.suggested_weight) detail += ` · ${ce.suggested_weight}kg`;
+          return `<span style="display:inline-block;background:var(--gray-light);border-radius:4px;padding:2px 8px;font-size:12px;margin:2px">${escapeHtml(detail)}</span>`;
+        }).join('');
+      const typeColor = CIRCUIT_TYPE_COLORS[c.type] || '#6b7280';
+      const typeLabel = CIRCUIT_TYPE_LABELS[c.type] || c.type;
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+                <div class="card-title">${escapeHtml(c.name)}</div>
+                <span style="background:${typeColor};color:white;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px">${typeLabel}</span>
+              </div>
+              ${c.notes ? `<div class="card-desc">${escapeHtml(c.notes)}</div>` : ''}
+              ${exList ? `<div style="margin-top:8px">${exList}</div>` : ''}
+            </div>
+            <div class="card-actions">
+              <button class="btn-edit" onclick="editCircuit('${c.id}')">Editar</button>
+              <button class="btn-danger" onclick="deleteCircuit('${c.id}')">Eliminar</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function filterCircuits(query) {
+    const q = query.toLowerCase();
+    renderCircuits(allCircuits.filter(c => c.name.toLowerCase().includes(q)));
+  }
+
+  function openCircuitModal(id = null) {
+    editingCircuitId = id;
+    circuitExerciseRows = [];
+    document.getElementById('circuit-modal-title').textContent = id ? 'Editar circuito' : 'Nuevo circuito';
+    document.getElementById('circuit-exercises-rows').innerHTML = '';
+
+    if (id) {
+      const c = allCircuits.find(x => x.id === id);
+      document.getElementById('circ-name').value = c.name || '';
+      document.getElementById('circ-type').value = c.type || 'amrap';
+      document.getElementById('circ-notes').value = c.notes || '';
+      const exs = (c.circuit_exercises || []).sort((a,b) => a.order_index - b.order_index);
+      exs.forEach(ce => addCircuitExerciseRow(ce.exercise_id, ce.reps, ce.suggested_weight));
+    } else {
+      document.getElementById('circ-name').value = '';
+      document.getElementById('circ-type').value = 'amrap';
+      document.getElementById('circ-notes').value = '';
+      addCircuitExerciseRow();
+    }
+    document.getElementById('circuit-modal').classList.add('open');
+  }
+
+  function closeCircuitModal() {
+    document.getElementById('circuit-modal').classList.remove('open');
+    editingCircuitId = null;
+  }
+
+  function addCircuitExerciseRow(exerciseId = '', reps = '', weight = '') {
+    const rowId = 'cer-' + Date.now() + Math.random();
+    circuitExerciseRows.push(rowId);
+    const opts = allExercises.map(e =>
+      `<option value="${e.id}" ${e.id === exerciseId ? 'selected' : ''}>${escapeHtml(e.name)}</option>`
+    ).join('');
+    const html = `
+      <div id="${rowId}" style="display:grid;grid-template-columns:1fr 80px 90px 36px;gap:8px;margin-bottom:8px;align-items:center">
+        <select style="font-size:13px;padding:8px 10px"><option value="">-- Ejercicio --</option>${opts}</select>
+        <input type="number" placeholder="Reps" value="${reps}" style="font-size:13px;padding:8px 10px" min="0">
+        <input type="number" placeholder="Kg" value="${weight}" style="font-size:13px;padding:8px 10px" min="0" step="0.5">
+        <button onclick="removeRow('${rowId}')" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:16px;color:#dc2626;padding:4px">×</button>
+      </div>`;
+    document.getElementById('circuit-exercises-rows').insertAdjacentHTML('beforeend', html);
+  }
+
+  function removeRow(rowId) {
+    document.getElementById(rowId)?.remove();
+    circuitExerciseRows = circuitExerciseRows.filter(r => r !== rowId);
+  }
+
+  async function saveCircuit() {
+    const name = document.getElementById('circ-name').value.trim();
+    const type = document.getElementById('circ-type').value;
+    if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+
+    const payload = { name, type, notes: document.getElementById('circ-notes').value.trim() || null, user_id: currentUser.id };
+
+    let circuitId = editingCircuitId;
+    if (editingCircuitId) {
+      const { error } = await db.from('circuits').update(payload).eq('id', editingCircuitId);
+      if (error) { showToast('Error al guardar', 'error'); return; }
+      await db.from('circuit_exercises').delete().eq('circuit_id', editingCircuitId);
+    } else {
+      const { data, error } = await db.from('circuits').insert(payload).select().single();
+      if (error) { showToast('Error al guardar', 'error'); return; }
+      circuitId = data.id;
+    }
+
+    // Guardar ejercicios del circuito
+    const rows = document.getElementById('circuit-exercises-rows').querySelectorAll('div[id^="cer-"]');
+    const exPayload = [];
+    rows.forEach((row, i) => {
+      const sel = row.querySelector('select');
+      const inputs = row.querySelectorAll('input');
+      const exId = sel?.value;
+      if (!exId) return;
+      exPayload.push({
+        circuit_id: circuitId,
+        exercise_id: exId,
+        reps: parseInt(inputs[0]?.value) || null,
+        suggested_weight: parseFloat(inputs[1]?.value) || null,
+        order_index: i
+      });
+    });
+
+    if (exPayload.length > 0) {
+      const { error } = await db.from('circuit_exercises').insert(exPayload);
+      if (error) { showToast('Error al guardar ejercicios', 'error'); return; }
+    }
+
+    showToast(editingCircuitId ? 'Circuito actualizado' : 'Circuito creado');
+    closeCircuitModal();
+    loadCircuits();
+  }
+
+  async function editCircuit(id) { openCircuitModal(id); }
+
+  async function deleteCircuit(id) {
+    if (!confirm('¿Eliminar este circuito?')) return;
+    const { error } = await db.from('circuits').delete().eq('id', id);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Circuito eliminado');
+    loadCircuits();
+  }
+
+  document.getElementById('circuit-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeCircuitModal();
+  });
+
+  // ── ENTRENAMIENTO DIARIO ──
+
+  let workoutMode = null;
+  let workoutExercises = [];
+  let workoutCircuits = [];
+  let activeSessionId = null;
+  let exerciseBestRM = {};
+  let exerciseLastSession = {}; // cache: exerciseId -> [{reps, weight}] última sesión
+
+  async function fetchLastSession(exerciseId) {
+    if (exerciseLastSession[exerciseId] !== undefined) return exerciseLastSession[exerciseId];
+    // Buscar el último workout que tenga este ejercicio
+    const { data } = await db.from('workout_sets')
+      .select('set_number, reps, weight, workouts(date)')
+      .eq('exercise_id', exerciseId)
+      .order('workouts(date)', { ascending: false })
+      .order('set_number', { ascending: true })
+      .limit(20);
+    if (!data || data.length === 0) { exerciseLastSession[exerciseId] = []; return []; }
+    // Agrupar por fecha y coger la más reciente
+    const lastDate = data[0].workouts?.date;
+    const lastSets = data.filter(s => s.workouts?.date === lastDate);
+    exerciseLastSession[exerciseId] = lastSets;
+    return lastSets;
+  } // cache: exerciseId -> best 1RM ever
+
+  async function fetchBestRM(exerciseId) {
+    if (exerciseBestRM[exerciseId] !== undefined) return exerciseBestRM[exerciseId];
+    const { data } = await db.from('workout_sets')
+      .select('weight, reps')
+      .eq('exercise_id', exerciseId);
+    let best = 0;
+    (data || []).forEach(s => {
+      if (s.weight && s.reps) best = Math.max(best, calc1RM(s.weight, s.reps));
+    });
+    exerciseBestRM[exerciseId] = best;
+    return best;
+  }
+
+  function initWorkoutPage() {
+    const today = new Date().toLocaleDateString('es-ES', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    document.getElementById('workout-date').textContent = today.charAt(0).toUpperCase() + today.slice(1);
+    workoutExercises = [];
+    workoutCircuits = [];
+    activeSessionId = null;
+    showWorkoutStep(1);
+    Promise.all([loadExercises(), loadCircuits(), loadRoutines()]).then(() => {
+      document.getElementById('wo-add-exercise-select').innerHTML =
+        '<option value="">-- Selecciona ejercicio --</option>' +
+        allExercises.map(e => `<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
+      document.getElementById('wo-add-circuit-select').innerHTML =
+        '<option value="">-- Selecciona circuito --</option>' +
+        allCircuits.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+      document.getElementById('wo-routine-select').innerHTML =
+        '<option value="">-- Selecciona rutina --</option>' +
+        allRoutines.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+    });
+  }
+
+  function showWorkoutStep(n) {
+    document.getElementById('workout-step1').style.display = n === 1 ? 'block' : 'none';
+    document.getElementById('workout-step2').style.display = n === 2 ? 'block' : 'none';
+    document.getElementById('workout-step3').style.display = n === 3 ? 'block' : 'none';
+  }
+
+  function startWorkout(mode) {
+    workoutMode = mode;
+    workoutExercises = [];
+    workoutCircuits = [];
+    activeSessionId = null;
+    showWorkoutStartQuote();
+    if (mode === 'routine') {
+      showWorkoutStep(2);
+    } else {
+      document.getElementById('wo-session-name').textContent = 'Entrenamiento libre';
+      document.getElementById('wo-exercises-container').innerHTML = '';
+      document.getElementById('wo-notes').value = '';
+      showWorkoutStep(3);
+    }
+  }
+
+  function workoutBack() {
+    if (document.getElementById('workout-step3').style.display === 'block' && workoutMode === 'routine') {
+      showWorkoutStep(2);
+    } else {
+      showWorkoutStep(1);
+    }
+  }
+
+  function loadRoutineSessions() {
+    const routineId = document.getElementById('wo-routine-select').value;
+    const routine = allRoutines.find(r => r.id === routineId);
+    const sessions = (routine?.routine_sessions || []).sort((a,b) => a.order_index - b.order_index);
+    document.getElementById('wo-session-select').innerHTML =
+      '<option value="">-- Selecciona sesión --</option>' +
+      sessions.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  }
+
+  async function loadWorkoutSession() {
+    const sessionId = document.getElementById('wo-session-select').value;
+    if (!sessionId) { showToast('Selecciona una sesión', 'error'); return; }
+    activeSessionId = sessionId;
+    const { data: sess } = await db.from('routine_sessions').select('name').eq('id', sessionId).single();
+    document.getElementById('wo-session-name').textContent = sess?.name || '';
+    document.getElementById('wo-notes').value = '';
+    const { data: exs } = await db.from('routine_session_exercises')
+      .select('*, exercises(name)').eq('session_id', sessionId).order('order_index');
+    const { data: circs } = await db.from('routine_session_circuits')
+      .select('*, circuits(name, type, circuit_exercises(*, exercises(name)))').eq('session_id', sessionId).order('order_index');
+    workoutExercises = (exs || []).map(e => ({
+      exerciseId: e.exercise_id, name: e.exercises?.name || '',
+      suggested_sets: e.sets, suggested_reps: e.reps, suggested_weight: e.suggested_weight, sets: []
+    }));
+    workoutCircuits = (circs || []).map(c => ({
+      circuitId: c.circuit_id, name: c.circuits?.name || '', type: c.circuits?.type || '',
+      rounds: '', duration: '', notes: '', exerciseWeights: {}
+    }));
+    // Precargar datos de última sesión para todos los ejercicios
+    await Promise.all(workoutExercises.map(ex => fetchLastSession(ex.exerciseId)));
+    renderWorkoutExercises();
+    showWorkoutStep(3);
+  }
+
+  function renderWorkoutExercises() {
+    const container = document.getElementById('wo-exercises-container');
+    let html = '';
+    workoutExercises.forEach((ex, exIdx) => {
+      const hint = [];
+      if (ex.suggested_sets) hint.push(ex.suggested_sets + ' series');
+      if (ex.suggested_reps) hint.push(ex.suggested_reps + ' reps');
+      if (ex.suggested_weight) hint.push(ex.suggested_weight + 'kg');
+      const hintHtml = hint.length ? `<span style="font-size:12px;color:var(--blue);background:var(--blue-light);padding:2px 8px;border-radius:10px;margin-left:8px">📌 ${hint.join(' · ')}</span>` : '';
+      const setsHtml = ex.sets.map((s, sIdx) => {
+        const prevReps = s.prevReps || '';
+        const prevWeight = s.prevWeight || '';
+        const prevHint = (prevReps || prevWeight)
+          ? `<span style="font-size:11px;color:#9ca3af;margin-left:44px;display:block;margin-top:2px">Última vez: ${prevReps ? prevReps+' reps' : ''}${prevReps && prevWeight ? ' · ' : ''}${prevWeight ? prevWeight+'kg' : ''}</span>`
+          : '';
+        return `
+        <div style="margin-bottom:10px">
+          <div style="display:grid;grid-template-columns:36px 80px 80px 1fr 30px;gap:8px;align-items:center;margin-bottom:2px">
+            <span style="font-size:13px;font-weight:600;color:var(--gray);text-align:center">S${sIdx+1}</span>
+            <input type="number" placeholder="${prevReps || 'Reps'}" value="${s.reps||''}" min="0"
+              onchange="updateSet(${exIdx},${sIdx},'reps',this.value)"
+              style="font-size:13px;padding:8px;text-align:center${prevReps && !s.reps ? ';border-color:#d1d5db;background:#f9fafb' : ''}">
+            <input type="number" placeholder="${prevWeight || 'Kg'}" value="${s.weight||''}" min="0" step="0.5"
+              onchange="updateSet(${exIdx},${sIdx},'weight',this.value)"
+              style="font-size:13px;padding:8px;text-align:center${prevWeight && !s.weight ? ';border-color:#d1d5db;background:#f9fafb' : ''}">
+            <input type="text" placeholder="Notas" value="${s.notes||''}"
+              onchange="updateSet(${exIdx},${sIdx},'notes',this.value)" style="font-size:13px;padding:8px">
+            <button onclick="removeSet(${exIdx},${sIdx})" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:14px;color:#dc2626;padding:2px">×</button>
+          </div>
+          ${prevHint}
+          <div id="rm-badge-${exIdx}-${sIdx}" style="display:none;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;margin-left:44px;width:fit-content"></div>
+        </div>`;
+      }).join('');
+      html += `
+        <div class="card" style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+              <span style="font-weight:600;font-size:15px">${escapeHtml(ex.name)}</span>${hintHtml}
+            </div>
+            <button class="btn-danger" style="font-size:11px;padding:4px 8px" onclick="removeWorkoutExercise(${exIdx})">Quitar</button>
+          </div>
+          <div style="display:grid;grid-template-columns:36px 80px 80px 1fr 30px;gap:8px;margin-bottom:6px">
+            <span style="font-size:11px;color:var(--gray);text-align:center">#</span>
+            <span style="font-size:11px;color:var(--gray);text-align:center">Reps</span>
+            <span style="font-size:11px;color:var(--gray);text-align:center">Peso (kg)</span>
+            <span style="font-size:11px;color:var(--gray)">Notas</span><span></span>
+          </div>
+          ${setsHtml}
+          <button class="btn-secondary" style="width:100%;margin-top:4px;font-size:13px" onclick="addSet(${exIdx})">+ Añadir serie</button>
+        </div>`;
+    });
+    workoutCircuits.forEach((circ, cIdx) => {
+      const typeLabel = CIRCUIT_TYPE_LABELS[circ.type] || circ.type;
+      const typeColor = CIRCUIT_TYPE_COLORS[circ.type] || '#6b7280';
+      const circData = allCircuits.find(c => c.id === circ.circuitId);
+      const exWeightsHtml = (circData?.circuit_exercises || []).sort((a,b) => a.order_index - b.order_index)
+        .map(ce => `
+          <div style="display:grid;grid-template-columns:1fr 100px;gap:8px;align-items:center;margin-bottom:8px">
+            <span style="font-size:13px">${escapeHtml(ce.exercises?.name || '')}</span>
+            <input type="number" placeholder="Kg" min="0" step="0.5" value="${circ.exerciseWeights[ce.exercise_id]||''}"
+              onchange="updateCircuitWeight(${cIdx},'${ce.exercise_id}',this.value)" style="font-size:13px;padding:8px;text-align:center">
+          </div>`).join('');
+      html += `
+        <div class="card" style="margin-bottom:14px;border-left:4px solid ${typeColor}">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div>
+              <span style="font-weight:600;font-size:15px">${escapeHtml(circ.name)}</span>
+              <span style="font-size:11px;font-weight:600;color:white;background:${typeColor};padding:2px 8px;border-radius:10px;margin-left:8px">${typeLabel}</span>
+            </div>
+            <button class="btn-danger" style="font-size:11px;padding:4px 8px" onclick="removeWorkoutCircuit(${cIdx})">Quitar</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div><label style="font-size:12px">Rondas</label>
+              <input type="number" min="0" value="${circ.rounds||''}" onchange="updateCircuit(${cIdx},'rounds',this.value)" style="font-size:13px;padding:8px;margin-top:4px"></div>
+            <div><label style="font-size:12px">Duración (min)</label>
+              <input type="number" min="0" step="0.5" value="${circ.duration||''}" onchange="updateCircuit(${cIdx},'duration',this.value)" style="font-size:13px;padding:8px;margin-top:4px"></div>
+          </div>
+          ${exWeightsHtml ? `<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:8px">PESOS USADOS</div>${exWeightsHtml}</div>` : ''}
+          <div><label style="font-size:12px">Notas</label>
+            <input type="text" placeholder="Observaciones..." value="${circ.notes||''}" onchange="updateCircuit(${cIdx},'notes',this.value)" style="font-size:13px;padding:8px;margin-top:4px"></div>
+        </div>`;
+    });
+    container.innerHTML = html || '<div class="empty" style="padding:20px"><p>Listo para atacar. Añade ejercicios o circuitos.</p></div>';
+  }
+
+  async function addSet(exIdx) {
+    const ex = workoutExercises[exIdx];
+    const sIdx = ex.sets.length;
+    // Obtener placeholder de la sesión anterior
+    const lastSets = await fetchLastSession(ex.exerciseId);
+    const lastSet = lastSets[sIdx] || lastSets[lastSets.length - 1] || null;
+    ex.sets.push({ reps:'', weight:'', notes:'', prevReps: lastSet?.reps || null, prevWeight: lastSet?.weight || null });
+    renderWorkoutExercises();
+  }
+  function removeSet(exIdx, sIdx) { workoutExercises[exIdx].sets.splice(sIdx,1); renderWorkoutExercises(); }
+  function updateSet(exIdx, sIdx, field, value) {
+    workoutExercises[exIdx].sets[sIdx][field] = value;
+    checkRecordBadge(exIdx, sIdx);
+  }
+
+  async function checkRecordBadge(exIdx, sIdx) {
+    const ex = workoutExercises[exIdx];
+    const s = ex.sets[sIdx];
+    const weight = parseFloat(s.weight);
+    const reps = parseInt(s.reps);
+    const badgeId = `rm-badge-${exIdx}-${sIdx}`;
+    const badge = document.getElementById(badgeId);
+    if (!badge) return;
+    if (!weight || !reps) { badge.style.display = 'none'; return; }
+    const current1RM = calc1RM(weight, reps);
+    const best = await fetchBestRM(ex.exerciseId);
+    if (current1RM > best) {
+      badge.textContent = '🏆 ¡Nuevo récord!';
+      badge.style.display = 'inline-block';
+      badge.style.background = '#fef9c3';
+      badge.style.color = '#854d0e';
+      badge.style.border = '1px solid #fde047';
+    } else {
+      const pct = best > 0 ? Math.round((current1RM / best) * 100) : 0;
+      badge.textContent = `${pct}% de tu mejor 1RM`;
+      badge.style.display = 'inline-block';
+      badge.style.background = 'var(--gray-light)';
+      badge.style.color = 'var(--gray)';
+      badge.style.border = '1px solid var(--border)';
+    }
+  }
+  function removeWorkoutExercise(exIdx) { workoutExercises.splice(exIdx,1); renderWorkoutExercises(); }
+  function removeWorkoutCircuit(cIdx) { workoutCircuits.splice(cIdx,1); renderWorkoutExercises(); }
+  function updateCircuit(cIdx, field, value) { workoutCircuits[cIdx][field] = value; }
+  function updateCircuitWeight(cIdx, exId, value) { workoutCircuits[cIdx].exerciseWeights[exId] = parseFloat(value)||null; }
+
+  function addWorkoutExercise() {
+    const sel = document.getElementById('wo-add-exercise-select');
+    const id = sel.value;
+    if (!id) { showToast('Selecciona un ejercicio', 'error'); return; }
+    const ex = allExercises.find(e => e.id === id);
+    workoutExercises.push({exerciseId:id, name:ex.name, sets:[], suggested_sets:null, suggested_reps:null, suggested_weight:null});
+    sel.value = '';
+    renderWorkoutExercises();
+  }
+
+  function addWorkoutCircuit() {
+    const sel = document.getElementById('wo-add-circuit-select');
+    const id = sel.value;
+    if (!id) { showToast('Selecciona un circuito', 'error'); return; }
+    const circ = allCircuits.find(c => c.id === id);
+    workoutCircuits.push({circuitId:id, name:circ.name, type:circ.type, rounds:'', duration:'', notes:'', exerciseWeights:{}});
+    sel.value = '';
+    renderWorkoutExercises();
+  }
+
+  async function saveWorkout() {
+    const today = new Date().toISOString().split('T')[0];
+    const notes = document.getElementById('wo-notes').value.trim();
+    const { data: workout, error } = await db.from('workouts').insert({
+      user_id: currentUser.id, date: today,
+      routine_session_id: activeSessionId || null,
+      notes: notes || null
+    }).select().single();
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    const setsPayload = [];
+    workoutExercises.forEach(ex => {
+      ex.sets.forEach((s,i) => {
+        if (!s.reps && !s.weight) return;
+        setsPayload.push({workout_id:workout.id, exercise_id:ex.exerciseId, set_number:i+1,
+          reps:parseInt(s.reps)||null, weight:parseFloat(s.weight)||null, notes:s.notes||null});
+      });
+    });
+    if (setsPayload.length > 0) await db.from('workout_sets').insert(setsPayload);
+    for (const circ of workoutCircuits) {
+      const { data: wc } = await db.from('workout_circuits').insert({
+        workout_id:workout.id, circuit_id:circ.circuitId,
+        rounds:parseInt(circ.rounds)||null, duration_minutes:parseFloat(circ.duration)||null, notes:circ.notes||null
+      }).select().single();
+      if (wc) {
+        const wcEx = Object.entries(circ.exerciseWeights).filter(([,w])=>w)
+          .map(([exId,w])=>({workout_circuit_id:wc.id, exercise_id:exId, weight:w}));
+        if (wcEx.length > 0) await db.from('workout_circuit_exercises').insert(wcEx);
       }
     }
-
-    const { data } = await db.auth.getSession();
-    if (data.session) window.location.href = 'app.html';
+    showToast(getRandomQuote(WORKOUT_SAVE_QUOTES));
+    workoutExercises = []; workoutCircuits = []; activeSessionId = null;
+    showWorkoutStep(1);
   }
 
-  handleInviteToken();
+  // ── RUTINAS ──
 
-  async function setInvitePassword() {
-    const password = document.getElementById('invite-password').value;
-    const password2 = document.getElementById('invite-password2').value;
-    if (!password || !password2) return showMsg('invite-msg', 'Rellena todos los campos.', 'error');
-    if (password !== password2) return showMsg('invite-msg', 'Las contraseñas no coinciden.', 'error');
-    if (password.length < 6) return showMsg('invite-msg', 'Mínimo 6 caracteres.', 'error');
+  let allRoutines = [];
+  let editingRoutineId = null;
+  let currentRoutineId = null;
+  let editingSessionId = null;
+  let sessionExRows = [];
+  let sessionCircRows = [];
 
-    const btn = document.querySelector('#invite-panel .btn');
-    btn.disabled = true; btn.textContent = 'Guardando...';
+  async function loadRoutines() {
+    const { data, error } = await db
+      .from('routines')
+      .select('*, routine_sessions(id, name, order_index)')
+      .order('name');
+    if (error) { showToast('Error al cargar rutinas', 'error'); return; }
+    allRoutines = data || [];
+    renderRoutines(allRoutines);
+  }
 
-    const { error } = await db.auth.updateUser({ password });
-    if (error) {
-      showMsg('invite-msg', 'Error: ' + error.message, 'error');
-      btn.disabled = false; btn.textContent = 'Establecer contraseña';
+  function renderRoutines(list) {
+    const container = document.getElementById('routines-list');
+    if (list.length === 0) {
+      container.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>Sin rutinas. La improvisación es para aficionados.</p><small>Define tu plan de ataque y síguelo.</small></div>`;
+      return;
+    }
+    container.innerHTML = list.map(r => {
+      const sessions = (r.routine_sessions || []).sort((a,b) => a.order_index - b.order_index);
+      const sessHtml = sessions.map(s => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--gray-light);border-radius:8px;margin-bottom:6px">
+          <span style="font-size:13px;font-weight:500">${escapeHtml(s.name)}</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn-edit" style="font-size:11px;padding:4px 10px" onclick="editSession('${s.id}','${r.id}')">Editar</button>
+            <button class="btn-danger" style="font-size:11px;padding:4px 10px" onclick="deleteSession('${s.id}')">Eliminar</button>
+          </div>
+        </div>`).join('');
+      return `
+        <div class="card">
+          <div class="card-header" style="margin-bottom:${sessions.length ? '14px' : '0'}">
+            <div>
+              <div class="card-title">${escapeHtml(r.name)}</div>
+              ${r.description ? `<div class="card-desc">${escapeHtml(r.description)}</div>` : ''}
+            </div>
+            <div class="card-actions">
+              <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="openSessionModal(null,'${r.id}')">+ Sesión</button>
+              <button class="btn-edit" onclick="editRoutine('${r.id}')">Editar</button>
+              <button class="btn-danger" onclick="deleteRoutine('${r.id}')">Eliminar</button>
+            </div>
+          </div>
+          ${sessHtml}
+        </div>`;
+    }).join('');
+  }
+
+  function filterRoutines(q) {
+    renderRoutines(allRoutines.filter(r => r.name.toLowerCase().includes(q.toLowerCase())));
+  }
+
+  function openRoutineModal(id = null) {
+    editingRoutineId = id;
+    document.getElementById('routine-modal-title').textContent = id ? 'Editar rutina' : 'Nueva rutina';
+    if (id) {
+      const r = allRoutines.find(x => x.id === id);
+      document.getElementById('rout-name').value = r.name || '';
+      document.getElementById('rout-desc').value = r.description || '';
     } else {
-      window.location.href = 'app.html';
+      document.getElementById('rout-name').value = '';
+      document.getElementById('rout-desc').value = '';
+    }
+    document.getElementById('routine-modal').classList.add('open');
+  }
+
+  function closeRoutineModal() {
+    document.getElementById('routine-modal').classList.remove('open');
+    editingRoutineId = null;
+  }
+
+  function editRoutine(id) { openRoutineModal(id); }
+
+  async function saveRoutine() {
+    const name = document.getElementById('rout-name').value.trim();
+    if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+    const payload = { name, description: document.getElementById('rout-desc').value.trim() || null, user_id: currentUser.id };
+    let error;
+    if (editingRoutineId) {
+      ({ error } = await db.from('routines').update(payload).eq('id', editingRoutineId));
+    } else {
+      ({ error } = await db.from('routines').insert(payload));
+    }
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    showToast(editingRoutineId ? 'Rutina actualizada' : 'Rutina creada');
+    closeRoutineModal();
+    loadRoutines();
+  }
+
+  async function deleteRoutine(id) {
+    if (!confirm('¿Eliminar esta rutina y todas sus sesiones?')) return;
+    const { error } = await db.from('routines').delete().eq('id', id);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Rutina eliminada');
+    loadRoutines();
+  }
+
+  // ── SESIONES ──
+
+  async function openSessionModal(sessionId = null, routineId = null) {
+    editingSessionId = sessionId;
+    currentRoutineId = routineId;
+    sessionExRows = [];
+    sessionCircRows = [];
+    document.getElementById('session-modal-title').textContent = sessionId ? 'Editar sesión' : 'Nueva sesión';
+    document.getElementById('sess-name').value = '';
+    document.getElementById('session-exercise-rows').innerHTML = '<div style="text-align:center;padding:12px;color:var(--gray);font-size:13px">Cargando ejercicios...</div>';
+    document.getElementById('session-circuit-rows').innerHTML = '';
+    document.getElementById('session-modal').classList.add('open');
+
+    // Cargar datos necesarios antes de construir las filas
+    await Promise.all([
+      allExercises.length === 0 ? loadExercises() : Promise.resolve(),
+      allCircuits.length === 0 ? loadCircuits() : Promise.resolve()
+    ]);
+
+    document.getElementById('session-exercise-rows').innerHTML = '';
+    document.getElementById('session-circuit-rows').innerHTML = '';
+
+    if (sessionId) {
+      const { data: sess } = await db.from('routine_sessions').select('*').eq('id', sessionId).single();
+      document.getElementById('sess-name').value = sess?.name || '';
+      const { data: exs } = await db.from('routine_session_exercises')
+        .select('*').eq('session_id', sessionId).order('order_index');
+      (exs || []).forEach(e => addSessionExerciseRow(e.exercise_id, e.sets, e.reps, e.suggested_weight));
+      const { data: circs } = await db.from('routine_session_circuits')
+        .select('*').eq('session_id', sessionId).order('order_index');
+      (circs || []).forEach(c => addSessionCircuitRow(c.circuit_id));
+    } else {
+      addSessionExerciseRow();
     }
   }
 
-  function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach((t, i) => {
-      t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+  function closeSessionModal() {
+    document.getElementById('session-modal').classList.remove('open');
+    editingSessionId = null;
+  }
+
+  async function editSession(sessionId, routineId) { await openSessionModal(sessionId, routineId); }
+
+  function addSessionExerciseRow(exerciseId='', sets='', reps='', weight='') {
+    const rowId = 'ser-' + Date.now() + Math.random();
+    sessionExRows.push(rowId);
+    const opts = allExercises.map(e =>
+      `<option value="${e.id}" ${e.id === exerciseId ? 'selected' : ''}>${escapeHtml(e.name)}</option>`
+    ).join('');
+    const html = `
+      <div id="${rowId}" style="display:grid;grid-template-columns:1fr 60px 60px 80px 36px;gap:6px;margin-bottom:8px;align-items:center">
+        <select style="font-size:13px;padding:8px 10px"><option value="">-- Ejercicio --</option>${opts}</select>
+        <input type="number" placeholder="Series" value="${sets}" style="font-size:13px;padding:8px 6px;text-align:center" min="1">
+        <input type="number" placeholder="Reps" value="${reps}" style="font-size:13px;padding:8px 6px;text-align:center" min="1">
+        <input type="number" placeholder="Kg" value="${weight}" style="font-size:13px;padding:8px 6px;text-align:center" min="0" step="0.5">
+        <button onclick="removeRow('${rowId}')" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:16px;color:#dc2626;padding:4px">×</button>
+      </div>`;
+    document.getElementById('session-exercise-rows').insertAdjacentHTML('beforeend', html);
+  }
+
+  function addSessionCircuitRow(circuitId='') {
+    const rowId = 'scr-' + Date.now() + Math.random();
+    sessionCircRows.push(rowId);
+    const opts = allCircuits.map(c =>
+      `<option value="${c.id}" ${c.id === circuitId ? 'selected' : ''}>${escapeHtml(c.name)}</option>`
+    ).join('');
+    const html = `
+      <div id="${rowId}" style="display:grid;grid-template-columns:1fr 36px;gap:6px;margin-bottom:8px;align-items:center">
+        <select style="font-size:13px;padding:8px 10px"><option value="">-- Circuito --</option>${opts}</select>
+        <button onclick="removeRow('${rowId}')" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:16px;color:#dc2626;padding:4px">×</button>
+      </div>`;
+    document.getElementById('session-circuit-rows').insertAdjacentHTML('beforeend', html);
+  }
+
+  async function saveSession() {
+    const name = document.getElementById('sess-name').value.trim();
+    if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+
+    let sessionId = editingSessionId;
+    if (editingSessionId) {
+      await db.from('routine_sessions').update({ name }).eq('id', editingSessionId);
+      await db.from('routine_session_exercises').delete().eq('session_id', editingSessionId);
+      await db.from('routine_session_circuits').delete().eq('session_id', editingSessionId);
+    } else {
+      const { data: existing } = await db.from('routine_sessions').select('id').eq('routine_id', currentRoutineId);
+      const orderIndex = (existing || []).length;
+      const { data, error } = await db.from('routine_sessions')
+        .insert({ routine_id: currentRoutineId, name, order_index: orderIndex })
+        .select().single();
+      if (error) { showToast('Error al guardar', 'error'); return; }
+      sessionId = data.id;
+    }
+
+    // Guardar ejercicios de la sesión
+    const exRows = document.getElementById('session-exercise-rows').querySelectorAll('[id^="ser-"]');
+    const exPayload = [];
+    exRows.forEach((row, i) => {
+      const sel = row.querySelector('select');
+      const inputs = row.querySelectorAll('input');
+      if (!sel?.value) return;
+      exPayload.push({
+        session_id: sessionId,
+        exercise_id: sel.value,
+        sets: parseInt(inputs[0]?.value) || null,
+        reps: parseInt(inputs[1]?.value) || null,
+        suggested_weight: parseFloat(inputs[2]?.value) || null,
+        order_index: i
+      });
     });
-    document.getElementById('panel-login').classList.toggle('active', tab === 'login');
-    document.getElementById('panel-register').classList.toggle('active', tab === 'register');
+    if (exPayload.length > 0) await db.from('routine_session_exercises').insert(exPayload);
+
+    // Guardar circuitos de la sesión
+    const circRows = document.getElementById('session-circuit-rows').querySelectorAll('[id^="scr-"]');
+    const circPayload = [];
+    circRows.forEach((row, i) => {
+      const sel = row.querySelector('select');
+      if (!sel?.value) return;
+      circPayload.push({ session_id: sessionId, circuit_id: sel.value, order_index: i });
+    });
+    if (circPayload.length > 0) await db.from('routine_session_circuits').insert(circPayload);
+
+    showToast(editingSessionId ? 'Sesión actualizada' : 'Sesión creada');
+    closeSessionModal();
+    loadRoutines();
   }
 
-  function showMsg(id, text, type) {
-    const el = document.getElementById(id);
-    el.textContent = text;
-    el.className = 'message ' + type;
+  async function deleteSession(id) {
+    if (!confirm('¿Eliminar esta sesión?')) return;
+    const { error } = await db.from('routine_sessions').delete().eq('id', id);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Sesión eliminada');
+    loadRoutines();
   }
 
-  async function login() {
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    if (!email || !password) return showMsg('login-msg', 'Rellena todos los campos.', 'error');
 
-    const btn = document.querySelector('#panel-login .btn');
-    btn.disabled = true; btn.textContent = 'Entrando...';
+  // ── HISTORIAL ──
 
-    const { error } = await db.auth.signInWithPassword({ email, password });
-    if (error) {
-      showMsg('login-msg', 'Email o contraseña incorrectos.', 'error');
-      btn.disabled = false; btn.textContent = 'Entrar';
-    } else {
-      window.location.href = 'app.html';
+  let currentWorkoutId = null;
+
+  async function loadHistory() {
+    showHistoryQuote();
+    const { data, error } = await db
+      .from('workouts')
+      .select('*, routine_sessions(name)')
+      .eq('user_id', currentUser.id)
+      .order('date', { ascending: false });
+    if (error) { showToast('Error al cargar historial', 'error'); return; }
+    renderHistory(data || []);
+  }
+
+  function renderHistory(list) {
+    document.getElementById('history-list-view').style.display = 'block';
+    document.getElementById('history-detail-view').style.display = 'none';
+    const container = document.getElementById('history-list');
+    if (list.length === 0) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><p>Historial vacío. Las excusas no cuentan.</p><small>Cada sesión registrada es prueba de que estuviste aquí.</small></div>';
+      return;
     }
+    container.innerHTML = list.map(w => {
+      const date = new Date(w.date + 'T12:00:00').toLocaleDateString('es-ES', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+      const dateStr = date.charAt(0).toUpperCase() + date.slice(1);
+      const session = w.routine_sessions?.name || 'Entrenamiento libre';
+      return `
+        <div class="card" style="cursor:pointer;transition:border-color 0.15s" onclick="openWorkoutDetail('${w.id}')"
+          onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:600;font-size:15px">${dateStr}</div>
+              <div style="font-size:13px;color:var(--gray);margin-top:3px">${escapeHtml(session)}</div>
+              ${w.notes ? `<div style="font-size:12px;color:var(--gray);margin-top:4px;font-style:italic">${escapeHtml(w.notes)}</div>` : ''}
+            </div>
+            <span style="color:var(--blue);font-size:18px">→</span>
+          </div>
+        </div>`;
+    }).join('');
   }
 
-  async function register() {
-    const email = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value;
-    const password2 = document.getElementById('reg-password2').value;
+  async function openWorkoutDetail(workoutId) {
+    currentWorkoutId = workoutId;
+    const { data: workout } = await db.from('workouts')
+      .select('*, routine_sessions(name)').eq('id', workoutId).single();
+    const { data: sets } = await db.from('workout_sets')
+      .select('*, exercises(name)').eq('workout_id', workoutId).order('exercise_id').order('set_number');
+    const { data: circuits } = await db.from('workout_circuits')
+      .select('*, circuits(name, type), workout_circuit_exercises(*, exercises(name))')
+      .eq('workout_id', workoutId);
 
-    if (!email || !password || !password2) return showMsg('reg-msg', 'Rellena todos los campos.', 'error');
-    if (password !== password2) return showMsg('reg-msg', 'Las contraseñas no coinciden.', 'error');
-    if (password.length < 6) return showMsg('reg-msg', 'La contraseña debe tener al menos 6 caracteres.', 'error');
+    const date = new Date(workout.date + 'T12:00:00').toLocaleDateString('es-ES', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    document.getElementById('history-detail-date').textContent = date.charAt(0).toUpperCase() + date.slice(1);
+    document.getElementById('history-detail-session').textContent = workout.routine_sessions?.name || 'Entrenamiento libre';
 
-    const btn = document.querySelector('#panel-register .btn');
-    btn.disabled = true; btn.textContent = 'Creando cuenta...';
+    // Agrupar series por ejercicio
+    const byExercise = {};
+    (sets || []).forEach(s => {
+      const key = s.exercise_id;
+      if (!byExercise[key]) byExercise[key] = { name: s.exercises?.name || '', sets: [] };
+      byExercise[key].sets.push(s);
+    });
 
-    const { error } = await db.auth.signUp({ email, password });
-    if (error) {
-      showMsg('reg-msg', 'Error al crear la cuenta: ' + error.message, 'error');
-      btn.disabled = false; btn.textContent = 'Crear cuenta';
-    } else {
-      showMsg('reg-msg', 'Cuenta creada. Revisa tu email para confirmarla.', 'success');
-      btn.disabled = false; btn.textContent = 'Crear cuenta';
+    let html = '';
+
+    // Ejercicios
+    Object.values(byExercise).forEach(ex => {
+      const maxWeight = Math.max(...ex.sets.map(s => s.weight || 0));
+      const best = ex.sets.reduce((best, s) => {
+        if (!s.weight || !s.reps) return best;
+        const rm1 = calc1RM(s.weight, s.reps);
+        return rm1 > best.rm1 ? { rm1, weight: s.weight, reps: s.reps } : best;
+      }, { rm1: 0, weight: 0, reps: 0 });
+
+      const rm1 = best.rm1 > 0 ? best.rm1.toFixed(1) : '-';
+      const rm3 = best.rm1 > 0 ? calcNRM(best.rm1, 3).toFixed(1) : '-';
+      const rm5 = best.rm1 > 0 ? calcNRM(best.rm1, 5).toFixed(1) : '-';
+
+      const setsHtml = ex.sets.map(s => `
+        <div style="display:grid;grid-template-columns:40px 60px 70px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <span style="color:var(--gray);font-weight:600">S${s.set_number}</span>
+          <span>${s.reps || '-'} reps</span>
+          <span style="font-weight:600">${s.weight ? s.weight + ' kg' : '-'}</span>
+          <span style="color:var(--gray)">${s.notes || ''}</span>
+        </div>`).join('');
+
+      html += `
+        <div class="card" style="margin-bottom:14px">
+          <div style="font-weight:600;font-size:15px;margin-bottom:8px">${escapeHtml(ex.name)}</div>
+          ${setsHtml}
+          ${best.rm1 > 0 ? `
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">
+            <div style="background:var(--blue-light);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:11px;color:var(--gray);font-weight:600">1RM estimado</div>
+              <div style="font-size:18px;font-weight:700;color:var(--blue)">${rm1} kg</div>
+            </div>
+            <div style="background:var(--gray-light);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:11px;color:var(--gray);font-weight:600">3RM estimado</div>
+              <div style="font-size:18px;font-weight:700;color:var(--black)">${rm3} kg</div>
+            </div>
+            <div style="background:var(--gray-light);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:11px;color:var(--gray);font-weight:600">5RM estimado</div>
+              <div style="font-size:18px;font-weight:700;color:var(--black)">${rm5} kg</div>
+            </div>
+          </div>` : ''}
+        </div>`;
+    });
+
+    // Circuitos
+    (circuits || []).forEach(c => {
+      const typeLabel = CIRCUIT_TYPE_LABELS[c.circuits?.type] || c.circuits?.type || '';
+      const typeColor = CIRCUIT_TYPE_COLORS[c.circuits?.type] || '#6b7280';
+      const exHtml = (c.workout_circuit_exercises || []).map(ce => `
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)">
+          <span>${escapeHtml(ce.exercises?.name || '')}</span>
+          <span style="font-weight:600">${ce.weight ? ce.weight + ' kg' : '-'}</span>
+        </div>`).join('');
+      html += `
+        <div class="card" style="margin-bottom:14px;border-left:4px solid ${typeColor}">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span style="font-weight:600;font-size:15px">${escapeHtml(c.circuits?.name || '')}</span>
+            <span style="font-size:11px;font-weight:600;color:white;background:${typeColor};padding:2px 8px;border-radius:10px">${typeLabel}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div style="font-size:13px"><span style="color:var(--gray)">Rondas: </span><strong>${c.rounds || '-'}</strong></div>
+            <div style="font-size:13px"><span style="color:var(--gray)">Duración: </span><strong>${c.duration_minutes ? c.duration_minutes + ' min' : '-'}</strong></div>
+          </div>
+          ${exHtml}
+          ${c.notes ? `<div style="font-size:12px;color:var(--gray);margin-top:8px;font-style:italic">${escapeHtml(c.notes)}</div>` : ''}
+        </div>`;
+    });
+
+    if (workout.notes) {
+      html += `<div class="card" style="border-left:4px solid var(--blue)">
+        <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:4px">NOTAS DE SESIÓN</div>
+        <div style="font-size:14px">${escapeHtml(workout.notes)}</div>
+      </div>`;
     }
+
+    document.getElementById('history-detail-content').innerHTML = html || '<div class="empty"><p>Sin datos registrados</p></div>';
+    document.getElementById('history-list-view').style.display = 'none';
+    document.getElementById('history-detail-view').style.display = 'block';
   }
 
-  // Enter para enviar
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      if (document.getElementById('panel-login').classList.contains('active')) login();
-      else register();
+  function backToHistoryList() {
+    document.getElementById('history-list-view').style.display = 'block';
+    document.getElementById('history-detail-view').style.display = 'none';
+  }
+
+  async function deleteWorkout() {
+    if (!confirm('¿Eliminar este entrenamiento?')) return;
+    const { error } = await db.from('workouts').delete().eq('id', currentWorkoutId);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Entrenamiento eliminado');
+    loadHistory();
+  }
+
+  // ── 1RM / 3RM / 5RM (fórmula Epley) ──
+  function calc1RM(weight, reps) {
+    if (reps === 1) return weight;
+    return weight * (1 + reps / 30);
+  }
+  function calcNRM(rm1, n) {
+    return rm1 / (1 + n / 30);
+  }
+
+  // ── ESTADÍSTICAS POR EJERCICIO ──
+
+  async function loadStatsPage() {
+    if (allExercises.length === 0) await loadExercises();
+    const sel = document.getElementById('stats-exercise-select');
+    sel.innerHTML = '<option value="">-- Ejercicio --</option>' +
+      allExercises.map(e => `<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
+    document.getElementById('stats-content').innerHTML = '';
+  }
+
+  async function loadExerciseStats() {
+    const exId = document.getElementById('stats-exercise-select').value;
+    if (!exId) { document.getElementById('stats-content').innerHTML = ''; return; }
+
+    const { data: sets } = await db.from('workout_sets')
+      .select('*, workouts(date)')
+      .eq('exercise_id', exId)
+      .order('workouts(date)', { ascending: false });
+
+    if (!sets || sets.length === 0) {
+      document.getElementById('stats-content').innerHTML = '<div class="empty"><p>No hay datos para este ejercicio.</p></div>';
+      return;
+    }
+
+    // Calcular el mejor 1RM histórico
+    let best = { rm1: 0, weight: 0, reps: 0, date: '' };
+    sets.forEach(s => {
+      if (!s.weight || !s.reps) return;
+      const rm1 = calc1RM(s.weight, s.reps);
+      if (rm1 > best.rm1) best = { rm1, weight: s.weight, reps: s.reps, date: s.workouts?.date };
+    });
+
+    const rm1 = best.rm1.toFixed(1);
+    const rm3 = calcNRM(best.rm1, 3).toFixed(1);
+    const rm5 = calcNRM(best.rm1, 5).toFixed(1);
+
+    // Historial de pesos agrupado por fecha
+    const byDate = {};
+    sets.forEach(s => {
+      const d = s.workouts?.date;
+      if (!d) return;
+      if (!byDate[d]) byDate[d] = [];
+      byDate[d].push(s);
+    });
+
+    const histHtml = Object.entries(byDate).map(([date, dateSets]) => {
+      const dateStr = new Date(date + 'T12:00:00').toLocaleDateString('es-ES', {day:'2-digit', month:'short', year:'numeric'});
+      const maxW = Math.max(...dateSets.map(s => s.weight || 0));
+      const setsStr = dateSets.map(s => `${s.reps}×${s.weight}kg`).join(' | ');
+      return `
+        <div style="display:grid;grid-template-columns:120px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <span style="color:var(--gray)">${dateStr}</span>
+          <span>${setsStr}</span>
+          <span style="font-weight:600;color:var(--blue)">${maxW} kg</span>
+        </div>`;
+    }).join('');
+
+    document.getElementById('stats-content').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
+        <div style="background:var(--blue-light);border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:4px">1RM ESTIMADO</div>
+          <div style="font-size:28px;font-weight:700;color:var(--blue)">${rm1}<span style="font-size:14px"> kg</span></div>
+          <div style="font-size:11px;color:var(--gray);margin-top:4px">${best.weight}kg × ${best.reps} reps</div>
+        </div>
+        <div style="background:var(--gray-light);border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:4px">3RM ESTIMADO</div>
+          <div style="font-size:28px;font-weight:700;color:var(--black)">${rm3}<span style="font-size:14px"> kg</span></div>
+        </div>
+        <div style="background:var(--gray-light);border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:4px">5RM ESTIMADO</div>
+          <div style="font-size:28px;font-weight:700;color:var(--black)">${rm5}<span style="font-size:14px"> kg</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px">Historial de pesos</div>
+        ${histHtml}
+      </div>`;
+  }
+
+  // ── FOTOS DE PROGRESO ──
+
+  let currentPhotoId = null;
+
+  async function loadPhotos() {
+    const { data, error } = await db.from('progress_photos')
+      .select('*').order('date', { ascending: false });
+    if (error) { showToast('Error al cargar fotos', 'error'); return; }
+    renderPhotos(data || []);
+  }
+
+  function renderPhotos(list) {
+    const grid = document.getElementById('photos-grid');
+    if (list.length === 0) {
+      grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📸</div><p>No hay fotos aún. ¡Añade la primera!</p></div>';
+      return;
+    }
+    grid.innerHTML = list.map(p => {
+      const date = new Date(p.date + 'T12:00:00').toLocaleDateString('es-ES', {day:'2-digit', month:'short', year:'numeric'});
+      return `
+        <div onclick="viewPhoto('${p.id}')" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1.5px solid var(--border);transition:border-color 0.15s"
+          onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="height:180px;background:var(--gray-light);overflow:hidden">
+            ${p.photo_url
+              ? `<img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">`
+              : `<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:40px">📷</div>`}
+          </div>
+          <div style="padding:12px">
+            <div style="font-weight:600;font-size:14px">${date}</div>
+            ${p.weight ? `<div style="font-size:13px;color:var(--blue);margin-top:2px">${p.weight} kg</div>` : ''}
+            ${p.notes ? `<div style="font-size:12px;color:var(--gray);margin-top:4px">${escapeHtml(p.notes)}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function openPhotoModal() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('photo-date').value = today;
+    document.getElementById('photo-weight').value = '';
+    document.getElementById('photo-file').value = '';
+    document.getElementById('photo-notes').value = '';
+    document.getElementById('photo-preview').style.display = 'none';
+    document.getElementById('photo-modal').classList.add('open');
+  }
+
+  function closePhotoModal() {
+    document.getElementById('photo-modal').classList.remove('open');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('photo-file');
+    if (fileInput) {
+      fileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          document.getElementById('photo-preview-img').src = e.target.result;
+          document.getElementById('photo-preview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      });
     }
   });
+
+  async function savePhoto() {
+    const date = document.getElementById('photo-date').value;
+    const weight = document.getElementById('photo-weight').value;
+    const notes = document.getElementById('photo-notes').value.trim();
+    const file = document.getElementById('photo-file').files[0];
+
+    if (!date) { showToast('La fecha es obligatoria', 'error'); return; }
+
+    const btn = document.getElementById('photo-save-btn');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
+    let photoUrl = null;
+
+    if (file) {
+      const ext = file.name.split('.').pop();
+      const path = `${currentUser.id}/${Date.now()}.${ext}`;
+      const { data: uploadData, error: uploadError } = await db.storage
+        .from('progress-photos')
+        .upload(path, file, { upsert: false });
+
+      if (uploadError) {
+        showToast('Error al subir la foto: ' + uploadError.message, 'error');
+        btn.disabled = false; btn.textContent = 'Guardar';
+        return;
+      }
+
+      const { data: urlData } = db.storage.from('progress-photos').getPublicUrl(path);
+      photoUrl = urlData?.publicUrl || null;
+    }
+
+    const { error } = await db.from('progress_photos').insert({
+      user_id: currentUser.id,
+      date,
+      weight: parseFloat(weight) || null,
+      notes: notes || null,
+      photo_url: photoUrl
+    });
+
+    if (error) { showToast('Error al guardar', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; return; }
+
+    showToast('Foto guardada');
+    closePhotoModal();
+    loadPhotos();
+    btn.disabled = false; btn.textContent = 'Guardar';
+  }
+
+  async function viewPhoto(id) {
+    const { data: p } = await db.from('progress_photos').select('*').eq('id', id).single();
+    if (!p) return;
+    currentPhotoId = id;
+    const date = new Date(p.date + 'T12:00:00').toLocaleDateString('es-ES', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+    document.getElementById('photo-view-date').textContent = date.charAt(0).toUpperCase() + date.slice(1);
+    document.getElementById('photo-view-weight').textContent = p.weight ? p.weight + ' kg' : '';
+    document.getElementById('photo-view-notes').textContent = p.notes || '';
+    const img = document.getElementById('photo-view-img');
+    if (p.photo_url) { img.src = p.photo_url; img.style.display = 'block'; }
+    else img.style.display = 'none';
+    document.getElementById('photo-view-modal').classList.add('open');
+  }
+
+  function closePhotoViewModal() {
+    document.getElementById('photo-view-modal').classList.remove('open');
+  }
+
+  async function deletePhoto() {
+    if (!confirm('¿Eliminar esta foto?')) return;
+    const { error } = await db.from('progress_photos').delete().eq('id', currentPhotoId);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Foto eliminada');
+    closePhotoViewModal();
+    loadPhotos();
+  }
+
+  document.getElementById('photo-modal').addEventListener('click', function(e) { if (e.target === this) closePhotoModal(); });
+  document.getElementById('photo-view-modal').addEventListener('click', function(e) { if (e.target === this) closePhotoViewModal(); });
+
+  // ── OBJETIVOS NUTRICIONALES ──
+
+  let nutritionGoals = null;
+
+  async function loadNutritionGoals() {
+    const { data } = await db.from('nutrition_goals').select('*').eq('user_id', currentUser.id).single();
+    nutritionGoals = data || null;
+  }
+
+  function updateGoalBars(totals) {
+    if (!nutritionGoals) {
+      ['kcal','protein','carbs','fat'].forEach(k => {
+        const bar = document.getElementById('bar-'+k);
+        const goal = document.getElementById('sum-'+k+'-goal');
+        if (bar) bar.style.width = '0%';
+        if (goal) goal.textContent = k === 'kcal' ? 'kcal' : 'g';
+      });
+      return;
+    }
+    const pairs = [
+      ['kcal', totals.kcal, nutritionGoals.calories, 'var(--blue)'],
+      ['protein', totals.protein, nutritionGoals.protein, '#16a34a'],
+      ['carbs', totals.carbs, nutritionGoals.carbs, '#d97706'],
+      ['fat', totals.fat, nutritionGoals.fat, '#dc2626'],
+    ];
+    pairs.forEach(([key, val, goal, color]) => {
+      const pct = Math.min(Math.round((val / goal) * 100), 100);
+      const bar = document.getElementById('bar-'+key);
+      const goalEl = document.getElementById('sum-'+key+'-goal');
+      if (bar) { bar.style.width = pct + '%'; bar.style.background = pct >= 100 ? '#16a34a' : color; }
+      if (goalEl) goalEl.textContent = (key === 'kcal' ? `de ${goal} kcal` : `de ${goal}g`) + ` (${pct}%)`;
+    });
+  }
+
+  async function openGoalsModal() {
+    if (!nutritionGoals) await loadNutritionGoals();
+    if (nutritionGoals) {
+      document.getElementById('goal-kcal').value = nutritionGoals.calories || '';
+      document.getElementById('goal-protein').value = nutritionGoals.protein || '';
+      document.getElementById('goal-carbs').value = nutritionGoals.carbs || '';
+      document.getElementById('goal-fat').value = nutritionGoals.fat || '';
+      document.getElementById('calc-weight').value = nutritionGoals.weight || '';
+      document.getElementById('calc-height').value = nutritionGoals.height || '';
+      document.getElementById('calc-age').value = nutritionGoals.age || '';
+      if (nutritionGoals.sex) document.getElementById('calc-sex').value = nutritionGoals.sex;
+      if (nutritionGoals.activity_level) document.getElementById('calc-activity').value = nutritionGoals.activity_level;
+      if (nutritionGoals.goal_type) document.getElementById('calc-goal').value = nutritionGoals.goal_type;
+    }
+    switchGoalsTab('manual');
+    document.getElementById('calc-result').style.display = 'none';
+    document.getElementById('goals-modal').classList.add('open');
+  }
+
+  function closeGoalsModal() { document.getElementById('goals-modal').classList.remove('open'); }
+
+  function switchGoalsTab(tab) {
+    document.getElementById('goals-tab-manual').style.display = tab === 'manual' ? 'block' : 'none';
+    document.getElementById('goals-tab-calculator').style.display = tab === 'calculator' ? 'block' : 'none';
+    document.querySelectorAll('#goals-modal .tab').forEach((btn, i) => {
+      btn.classList.toggle('active', (i === 0 && tab === 'manual') || (i === 1 && tab === 'calculator'));
+    });
+  }
+
+  function calculateGoals() {
+    const weight = parseFloat(document.getElementById('calc-weight').value);
+    const height = parseFloat(document.getElementById('calc-height').value);
+    const age = parseInt(document.getElementById('calc-age').value);
+    const sex = document.getElementById('calc-sex').value;
+    const activity = parseFloat(document.getElementById('calc-activity').value);
+    const goal = document.getElementById('calc-goal').value;
+
+    if (!weight || !height || !age) { showToast('Rellena todos los campos', 'error'); return; }
+
+    // Mifflin-St Jeor
+    let bmr;
+    if (sex === 'male') bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+    else bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+
+    let tdee = Math.round(bmr * activity);
+    if (goal === 'deficit') tdee -= 300;
+    else if (goal === 'surplus') tdee += 300;
+
+    // Macros: proteína 2g/kg, grasa 25% kcal, resto carbos
+    const protein = Math.round(weight * 2);
+    const fat = Math.round((tdee * 0.25) / 9);
+    const carbs = Math.round((tdee - protein * 4 - fat * 9) / 4);
+
+    document.getElementById('calc-res-kcal').textContent = tdee;
+    document.getElementById('calc-res-protein').textContent = protein + 'g';
+    document.getElementById('calc-res-carbs').textContent = carbs + 'g';
+    document.getElementById('calc-res-fat').textContent = fat + 'g';
+    document.getElementById('calc-result').style.display = 'block';
+    document.getElementById('calc-result').dataset.kcal = tdee;
+    document.getElementById('calc-result').dataset.protein = protein;
+    document.getElementById('calc-result').dataset.carbs = carbs;
+    document.getElementById('calc-result').dataset.fat = fat;
+  }
+
+  function applyCalculatedGoals() {
+    const res = document.getElementById('calc-result');
+    document.getElementById('goal-kcal').value = res.dataset.kcal;
+    document.getElementById('goal-protein').value = res.dataset.protein;
+    document.getElementById('goal-carbs').value = res.dataset.carbs;
+    document.getElementById('goal-fat').value = res.dataset.fat;
+    switchGoalsTab('manual');
+    showToast('Valores aplicados. Guarda para confirmar.');
+  }
+
+  async function saveGoals() {
+    const calories = parseFloat(document.getElementById('goal-kcal').value);
+    const protein = parseFloat(document.getElementById('goal-protein').value);
+    const carbs = parseFloat(document.getElementById('goal-carbs').value);
+    const fat = parseFloat(document.getElementById('goal-fat').value);
+    if (!calories || !protein || !carbs || !fat) { showToast('Rellena todos los campos', 'error'); return; }
+
+    const payload = {
+      user_id: currentUser.id, calories, protein, carbs, fat,
+      weight: parseFloat(document.getElementById('calc-weight').value) || null,
+      height: parseFloat(document.getElementById('calc-height').value) || null,
+      age: parseInt(document.getElementById('calc-age').value) || null,
+      sex: document.getElementById('calc-sex').value,
+      activity_level: document.getElementById('calc-activity').value,
+      goal_type: document.getElementById('calc-goal').value,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = await db.from('nutrition_goals').upsert(payload, { onConflict: 'user_id' });
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    nutritionGoals = payload;
+    showToast('Objetivos guardados');
+    closeGoalsModal();
+    loadNutritionLog();
+  }
+
+  document.getElementById('goals-modal').addEventListener('click', function(e) { if (e.target === this) closeGoalsModal(); });
+
+  // ── NUTRICIÓN ──
+
+  let allFoods = [];
+  let allRecipes = [];
+  let addFoodSelected = null; // {type:'off'|'food'|'recipe', data:{}}
+  let editingFoodId = null;
+  let editingRecipeId = null;
+  let recipeIngredients = []; // [{type:'food'|'off', id, name, kcal, protein, carbs, fat, amount}]
+
+  const MEAL_LABELS = { desayuno:'Desayuno', almuerzo:'Almuerzo', comida:'Comida', merienda:'Merienda', cena:'Cena', snack:'Snack' };
+  const MEAL_ORDER = ['desayuno','almuerzo','comida','merienda','cena','snack'];
+
+  // Navigate hook
+  const _origNavigate = navigate;
+
+  function initNutritionDate() {
+    const d = document.getElementById('nutrition-date');
+    if (!d.value) d.value = new Date().toISOString().split('T')[0];
+  }
+
+  // ── REGISTRO DIARIO ──
+
+  async function loadNutritionLog() {
+    const date = document.getElementById('nutrition-date').value;
+    if (!date) return;
+    const { data } = await db.from('nutrition_logs').select('*').eq('user_id', currentUser.id).eq('date', date);
+    renderNutritionLog(data || []);
+  }
+
+  function renderNutritionLog(logs) {
+    let totalKcal=0, totalP=0, totalC=0, totalF=0;
+    logs.forEach(l => {
+      const factor = l.amount_grams / 100;
+      totalKcal += (l.off_calories || 0) * factor;
+      totalP += (l.off_protein || 0) * factor;
+      totalC += (l.off_carbs || 0) * factor;
+      totalF += (l.off_fat || 0) * factor;
+    });
+    document.getElementById('sum-kcal').textContent = Math.round(totalKcal);
+    document.getElementById('sum-protein').textContent = totalP.toFixed(1);
+    document.getElementById('sum-carbs').textContent = totalC.toFixed(1);
+    document.getElementById('sum-fat').textContent = totalF.toFixed(1);
+    updateGoalBars({ kcal: Math.round(totalKcal), protein: totalP, carbs: totalC, fat: totalF });
+
+    const byMeal = {};
+    MEAL_ORDER.forEach(m => byMeal[m] = []);
+    logs.forEach(l => { if (byMeal[l.meal_type]) byMeal[l.meal_type].push(l); });
+
+    const container = document.getElementById('nutrition-meals');
+    let html = '';
+    MEAL_ORDER.forEach(meal => {
+      const items = byMeal[meal];
+      if (items.length === 0) return;
+      const mealKcal = items.reduce((s,l) => s + (l.off_calories||0)*(l.amount_grams/100), 0);
+      const itemsHtml = items.map(l => {
+        const factor = l.amount_grams/100;
+        const kcal = Math.round((l.off_calories||0)*factor);
+        const name = l.off_name || 'Alimento';
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+            <div>
+              <span style="font-weight:500">${escapeHtml(name)}</span>
+              <span style="color:var(--gray);margin-left:8px">${l.amount_grams}g</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="font-weight:600;color:var(--blue)">${kcal} kcal</span>
+              <span style="font-size:11px;color:var(--gray)">P:${((l.off_protein||0)*factor).toFixed(1)} C:${((l.off_carbs||0)*factor).toFixed(1)} G:${((l.off_fat||0)*factor).toFixed(1)}</span>
+              <button onclick="deleteNutritionLog('${l.id}')" style="background:none;border:none;cursor:pointer;color:var(--error);font-size:16px;padding:0">×</button>
+            </div>
+          </div>`;
+      }).join('');
+      html += `
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-weight:600;font-size:15px">${MEAL_LABELS[meal]}</div>
+            <div style="font-size:13px;color:var(--blue);font-weight:600">${Math.round(mealKcal)} kcal</div>
+          </div>
+          ${itemsHtml}
+        </div>`;
+    });
+    container.innerHTML = html || '<div class="empty"><p>Sin registros para este día. Pulsa + Añadir.</p></div>';
+  }
+
+  async function deleteNutritionLog(id) {
+    await db.from('nutrition_logs').delete().eq('id', id);
+    loadNutritionLog();
+  }
+
+  // ── MODAL AÑADIR COMIDA ──
+
+  function openAddFoodModal() {
+    addFoodSelected = null;
+    document.getElementById('add-food-selected').style.display = 'none';
+    document.getElementById('off-search-input').value = '';
+    document.getElementById('off-results').innerHTML = '';
+    document.getElementById('add-food-amount').value = '100';
+    switchAddFoodTab('search');
+    document.getElementById('add-food-modal').classList.add('open');
+    if (allFoods.length === 0) loadFoods().then(renderMyFoodsSelectList);
+    else renderMyFoodsSelectList();
+    if (allRecipes.length === 0) loadRecipes().then(renderMyRecipesSelectList);
+    else renderMyRecipesSelectList();
+  }
+
+  function closeAddFoodModal() { document.getElementById('add-food-modal').classList.remove('open'); }
+
+  function switchAddFoodTab(tab) {
+    ['search','my','recipe'].forEach(t => {
+      document.getElementById('add-tab-'+t).style.display = t===tab ? 'block' : 'none';
+    });
+    document.querySelectorAll('#add-food-modal .tab').forEach((btn,i) => {
+      btn.classList.toggle('active', ['search','my','recipe'][i] === tab);
+    });
+  }
+
+  async function fetchOFF(url, retries = 2) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+      return await res.json();
+    } catch(e) {
+      clearTimeout(timeout);
+      if (retries > 0) {
+        await new Promise(r => setTimeout(r, 1000));
+        return fetchOFF(url, retries - 1);
+      }
+      throw e;
+    }
+  }
+
+  async function searchOFF() {
+    const q = document.getElementById('off-search-input').value.trim();
+    if (!q) return;
+    const container = document.getElementById('off-results');
+    container.innerHTML = '<div style="text-align:center;padding:12px;color:var(--gray);font-size:13px">🔍 Buscando...</div>';
+    try {
+      const data = await fetchOFF(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&fields=id,product_name,nutriments`);
+      const products = (data.products || []).filter(p => p.product_name && p.nutriments);
+      if (products.length === 0) {
+        container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px">Sin resultados. Prueba otro término o búscalo en español/inglés.</div>';
+        return;
+      }
+      container.innerHTML = products.map(p => {
+        const n = p.nutriments;
+        const kcal = n['energy-kcal_100g'] ? Math.round(n['energy-kcal_100g']) : n['energy_100g'] ? Math.round(n['energy_100g']/4.18) : '?';
+        return `<div onclick="selectOFFProduct(${JSON.stringify(p).replace(/"/g,'&quot;')})"
+          style="padding:10px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
+          onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''">
+          <div style="font-weight:500">${escapeHtml(p.product_name)}</div>
+          <div style="color:var(--gray);font-size:11px">${kcal} kcal | P:${(n.proteins_100g||0).toFixed(1)}g C:${(n.carbohydrates_100g||0).toFixed(1)}g G:${(n.fat_100g||0).toFixed(1)}g · por 100g</div>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      container.innerHTML = `<div style="padding:12px;font-size:13px">
+        <div style="color:var(--error);margin-bottom:8px">⚠️ No se pudo conectar con Open Food Facts.</div>
+        <div style="color:var(--gray);margin-bottom:10px">Puedes buscar el alimento directamente en <a href="https://es.openfoodfacts.org" target="_blank" style="color:var(--blue)">openfoodfacts.org</a> e introducirlo manualmente en "Mis alimentos".</div>
+        <button class="btn-secondary" style="font-size:12px" onclick="searchOFF()">🔄 Reintentar</button>
+      </div>`;
+    }
+  }
+
+  function selectOFFProduct(p) {
+    const n = p.nutriments;
+    addFoodSelected = {
+      type: 'off',
+      id: p.id,
+      name: p.product_name,
+      kcal: n['energy-kcal_100g'] || Math.round((n['energy_100g']||0)/4.18),
+      protein: n.proteins_100g || 0,
+      carbs: n.carbohydrates_100g || 0,
+      fat: n.fat_100g || 0
+    };
+    showAddFoodSelected();
+  }
+
+  function renderMyFoodsSelectList() {
+    const container = document.getElementById('my-foods-select-list');
+    if (allFoods.length === 0) { container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px">No tienes alimentos guardados.</div>'; return; }
+    container.innerHTML = allFoods.map(f => `
+      <div onclick="selectMyFood('${f.id}')"
+        style="padding:10px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
+        onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''">
+        <div style="font-weight:500">${escapeHtml(f.name)}</div>
+        <div style="color:var(--gray);font-size:11px">${f.calories} kcal | P:${f.protein}g C:${f.carbs}g G:${f.fat}g · por 100g</div>
+      </div>`).join('');
+  }
+
+  function selectMyFood(id) {
+    const f = allFoods.find(x => x.id === id);
+    addFoodSelected = { type:'food', id:f.id, name:f.name, kcal:f.calories, protein:f.protein, carbs:f.carbs, fat:f.fat };
+    showAddFoodSelected();
+  }
+
+  function renderMyRecipesSelectList() {
+    const container = document.getElementById('my-recipes-select-list');
+    if (allRecipes.length === 0) { container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px">No tienes recetas guardadas.</div>'; return; }
+    container.innerHTML = allRecipes.map(r => `
+      <div onclick="selectMyRecipe('${r.id}')"
+        style="padding:10px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
+        onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''">
+        <div style="font-weight:500">${escapeHtml(r.name)}</div>
+        <div style="color:var(--gray);font-size:11px">${r.total_grams ? r.total_grams+'g totales' : ''}</div>
+      </div>`).join('');
+  }
+
+  function selectMyRecipe(id) {
+    const r = allRecipes.find(x => x.id === id);
+    addFoodSelected = { type:'recipe', id:r.id, name:r.name, kcal:r._kcal||0, protein:r._protein||0, carbs:r._carbs||0, fat:r._fat||0 };
+    showAddFoodSelected();
+  }
+
+  function showAddFoodSelected() {
+    if (!addFoodSelected) return;
+    document.getElementById('add-food-selected-name').textContent = addFoodSelected.name;
+    document.getElementById('add-food-selected-macros').textContent =
+      `${addFoodSelected.kcal} kcal · P:${addFoodSelected.protein}g · C:${addFoodSelected.carbs}g · G:${addFoodSelected.fat}g (por 100g)`;
+    document.getElementById('add-food-selected').style.display = 'block';
+    updateAddFoodMacros();
+  }
+
+  function updateAddFoodMacros() {
+    if (!addFoodSelected) return;
+    const amount = parseFloat(document.getElementById('add-food-amount').value) || 100;
+    const factor = amount / 100;
+    const kcal = (addFoodSelected.kcal * factor).toFixed(0);
+    const p = (addFoodSelected.protein * factor).toFixed(1);
+    const c = (addFoodSelected.carbs * factor).toFixed(1);
+    const f = (addFoodSelected.fat * factor).toFixed(1);
+    document.getElementById('add-food-macro-preview').innerHTML = `
+      <div style="background:var(--blue-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">KCAL</div>
+        <div style="font-size:18px;font-weight:700;color:var(--blue)">${kcal}</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">PROT</div>
+        <div style="font-size:18px;font-weight:700;color:#16a34a">${p}g</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">CARB</div>
+        <div style="font-size:18px;font-weight:700;color:#d97706">${c}g</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">GRAS</div>
+        <div style="font-size:18px;font-weight:700;color:#dc2626">${f}g</div>
+      </div>`;
+  }
+
+  async function saveNutritionLog() {
+    if (!addFoodSelected) { showToast('Selecciona un alimento', 'error'); return; }
+    const amount = parseFloat(document.getElementById('add-food-amount').value);
+    if (!amount) { showToast('Introduce la cantidad', 'error'); return; }
+    const date = document.getElementById('nutrition-date').value;
+    const meal = document.getElementById('add-food-meal-type').value;
+    const payload = {
+      user_id: currentUser.id, date, meal_type: meal,
+      amount_grams: amount,
+      off_name: addFoodSelected.name,
+      off_calories: addFoodSelected.kcal,
+      off_protein: addFoodSelected.protein,
+      off_carbs: addFoodSelected.carbs,
+      off_fat: addFoodSelected.fat,
+    };
+    if (addFoodSelected.type === 'off') payload.off_id = addFoodSelected.id;
+    if (addFoodSelected.type === 'food') payload.food_id = addFoodSelected.id;
+    if (addFoodSelected.type === 'recipe') payload.recipe_id = addFoodSelected.id;
+    const { error } = await db.from('nutrition_logs').insert(payload);
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    showToast('Añadido al registro');
+    closeAddFoodModal();
+    loadNutritionLog();
+  }
+
+  // ── ALIMENTOS PROPIOS ──
+
+  async function loadFoods() {
+    const { data } = await db.from('foods').select('*').order('name');
+    allFoods = data || [];
+    return allFoods;
+  }
+
+  async function renderFoodsList() {
+    await loadFoods();
+    const container = document.getElementById('foods-list');
+    if (allFoods.length === 0) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">🍎</div><p>Sin alimentos. El cuerpo es lo que comes.</p><small>Registra tus alimentos y controla cada gramo.</small></div>'; return;
+    }
+    container.innerHTML = allFoods.map(f => `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">${escapeHtml(f.name)}</div>
+            <div class="card-desc">${f.calories} kcal · P:${f.protein}g · C:${f.carbs}g · G:${f.fat}g <span style="color:var(--gray)">(por 100g)</span></div>
+            ${f.notes ? `<div class="card-desc" style="margin-top:4px">${escapeHtml(f.notes)}</div>` : ''}
+          </div>
+          <div class="card-actions">
+            <button class="btn-edit" onclick="editFood('${f.id}')">Editar</button>
+            <button class="btn-danger" onclick="deleteFood('${f.id}')">Eliminar</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function filterFoods(q) {
+    const filtered = allFoods.filter(f => f.name.toLowerCase().includes(q.toLowerCase()));
+    const container = document.getElementById('foods-list');
+    container.innerHTML = filtered.map(f => `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">${escapeHtml(f.name)}</div>
+            <div class="card-desc">${f.calories} kcal · P:${f.protein}g · C:${f.carbs}g · G:${f.fat}g</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-edit" onclick="editFood('${f.id}')">Editar</button>
+            <button class="btn-danger" onclick="deleteFood('${f.id}')">Eliminar</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function openFoodModal(id=null) {
+    editingFoodId = id;
+    document.getElementById('food-modal-title').textContent = id ? 'Editar alimento' : 'Nuevo alimento';
+    if (id) {
+      const f = allFoods.find(x => x.id===id);
+      document.getElementById('food-name').value = f.name||'';
+      document.getElementById('food-calories').value = f.calories||'';
+      document.getElementById('food-protein').value = f.protein||'';
+      document.getElementById('food-carbs').value = f.carbs||'';
+      document.getElementById('food-fat').value = f.fat||'';
+      document.getElementById('food-notes').value = f.notes||'';
+    } else {
+      ['food-name','food-calories','food-protein','food-carbs','food-fat','food-notes'].forEach(id => document.getElementById(id).value='');
+    }
+    document.getElementById('food-modal').classList.add('open');
+  }
+
+  function closeFoodModal() { document.getElementById('food-modal').classList.remove('open'); }
+  function editFood(id) { openFoodModal(id); }
+
+  async function saveFood() {
+    const name = document.getElementById('food-name').value.trim();
+    const calories = parseFloat(document.getElementById('food-calories').value);
+    if (!name || !calories) { showToast('Nombre y calorías son obligatorios', 'error'); return; }
+    const payload = { name, calories, protein: parseFloat(document.getElementById('food-protein').value)||0,
+      carbs: parseFloat(document.getElementById('food-carbs').value)||0,
+      fat: parseFloat(document.getElementById('food-fat').value)||0,
+      notes: document.getElementById('food-notes').value.trim()||null, user_id: currentUser.id };
+    let error;
+    if (editingFoodId) ({ error } = await db.from('foods').update(payload).eq('id', editingFoodId));
+    else ({ error } = await db.from('foods').insert(payload));
+    if (error) { showToast('Error al guardar', 'error'); return; }
+    showToast(editingFoodId ? 'Alimento actualizado' : 'Alimento guardado');
+    closeFoodModal();
+    renderFoodsList();
+  }
+
+  async function deleteFood(id) {
+    if (!confirm('¿Eliminar este alimento?')) return;
+    await db.from('foods').delete().eq('id', id);
+    showToast('Alimento eliminado');
+    renderFoodsList();
+  }
+
+  // ── RECETAS ──
+
+  async function loadRecipes() {
+    const { data } = await db.from('recipes').select('*, recipe_ingredients(*)').order('name');
+    allRecipes = data || [];
+    return allRecipes;
+  }
+
+  async function renderRecipesList() {
+    await loadRecipes();
+    const container = document.getElementById('recipes-list');
+    if (allRecipes.length === 0) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">📖</div><p>Sin recetas. Come como entrenas: con cabeza.</p><small>Crea tu primera receta y calcula sus macros al instante.</small></div>'; return;
+    }
+    container.innerHTML = allRecipes.map(r => {
+      let kcal=0,p=0,c=0,f=0;
+      (r.recipe_ingredients||[]).forEach(ing => {
+        const factor = ing.amount_grams/100;
+        kcal += (ing.off_calories||0)*factor;
+        p += (ing.off_protein||0)*factor;
+        c += (ing.off_carbs||0)*factor;
+        f += (ing.off_fat||0)*factor;
+      });
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">${escapeHtml(r.name)}</div>
+              <div class="card-desc">${Math.round(kcal)} kcal · P:${p.toFixed(1)}g · C:${c.toFixed(1)}g · G:${f.toFixed(1)}g</div>
+              ${r.notes ? `<div class="card-desc">${escapeHtml(r.notes)}</div>` : ''}
+            </div>
+            <div class="card-actions">
+              <button class="btn-edit" onclick="editRecipe('${r.id}')">Editar</button>
+              <button class="btn-danger" onclick="deleteRecipe('${r.id}')">Eliminar</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function openRecipeModal(id=null) {
+    editingRecipeId = id;
+    recipeIngredients = [];
+    document.getElementById('recipe-modal-title').textContent = id ? 'Editar receta' : 'Nueva receta';
+    document.getElementById('recipe-name').value = '';
+    document.getElementById('recipe-grams').value = '';
+    document.getElementById('recipe-notes').value = '';
+    document.getElementById('recipe-ingredient-rows').innerHTML = '';
+    document.getElementById('recipe-ing-results').innerHTML = '';
+    document.getElementById('recipe-ing-search').value = '';
+    document.getElementById('recipe-macro-preview').innerHTML = '';
+    if (id) {
+      const r = allRecipes.find(x => x.id===id);
+      document.getElementById('recipe-name').value = r.name||'';
+      document.getElementById('recipe-grams').value = r.total_grams||'';
+      document.getElementById('recipe-notes').value = r.notes||'';
+      (r.recipe_ingredients||[]).forEach(ing => {
+        recipeIngredients.push({ id: ing.id, name: ing.off_name, kcal: ing.off_calories, protein: ing.off_protein,
+          carbs: ing.off_carbs, fat: ing.off_fat, amount: ing.amount_grams, food_id: ing.food_id, off_id: ing.off_id });
+      });
+      renderRecipeIngredientRows();
+    }
+    document.getElementById('recipe-modal').classList.add('open');
+  }
+
+  function closeRecipeModal() { document.getElementById('recipe-modal').classList.remove('open'); }
+  async function editRecipe(id) { await loadRecipes(); openRecipeModal(id); }
+
+  async function searchRecipeIngredient(q) {
+    if (q.length < 2) { document.getElementById('recipe-ing-results').innerHTML = ''; return; }
+    const container = document.getElementById('recipe-ing-results');
+    // Buscar en mis alimentos primero
+    const myMatches = allFoods.filter(f => f.name.toLowerCase().includes(q.toLowerCase())).slice(0,3);
+    let html = myMatches.map(f => `
+      <div onclick="addRecipeIngredient({type:'food',id:'${f.id}',name:'${escapeHtml(f.name)}',kcal:${f.calories},protein:${f.protein},carbs:${f.carbs},fat:${f.fat}})"
+        style="padding:8px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
+        onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''">
+        <span style="font-weight:500">${escapeHtml(f.name)}</span>
+        <span style="color:var(--gray);font-size:11px;margin-left:8px">Mis alimentos</span>
+      </div>`).join('');
+    // Buscar en OFF
+    try {
+      const data = await fetchOFF(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=5&fields=id,product_name,nutriments`);
+      (data.products||[]).filter(p=>p.product_name&&p.nutriments).slice(0,5).forEach(p => {
+        const n = p.nutriments;
+        const kcal = parseFloat(n['energy-kcal_100g'] || (n['energy_100g']||0)/4.18) || 0;
+        const protein = parseFloat(n.proteins_100g) || 0;
+        const carbs = parseFloat(n.carbohydrates_100g) || 0;
+        const fat = parseFloat(n.fat_100g) || 0;
+        html += `<div onclick="addRecipeIngredient({type:'off',id:'${p.id}',name:${JSON.stringify(p.product_name)},kcal:${kcal},protein:${protein},carbs:${carbs},fat:${fat}})"
+          style="padding:8px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
+          onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''">
+          <span style="font-weight:500">${escapeHtml(p.product_name)}</span>
+          <span style="color:var(--gray);font-size:11px;margin-left:8px">${Math.round(kcal)} kcal/100g</span>
+        </div>`;
+      });
+    } catch(e) {}
+    container.innerHTML = html || '<div style="padding:8px;color:var(--gray);font-size:13px">Sin resultados</div>';
+  }
+
+  function addRecipeIngredient(item) {
+    recipeIngredients.push({
+      ...item,
+      kcal: parseFloat(item.kcal) || 0,
+      protein: parseFloat(item.protein) || 0,
+      carbs: parseFloat(item.carbs) || 0,
+      fat: parseFloat(item.fat) || 0,
+      amount: 100
+    });
+    document.getElementById('recipe-ing-results').innerHTML = '';
+    document.getElementById('recipe-ing-search').value = '';
+    renderRecipeIngredientRows();
+  }
+
+  function renderRecipeIngredientRows() {
+    let kcal=0,p=0,c=0,f=0;
+    const html = recipeIngredients.map((ing,i) => {
+      const factor = ing.amount/100;
+      kcal += ing.kcal*factor; p += ing.protein*factor; c += ing.carbs*factor; f += ing.fat*factor;
+      return `
+        <div style="display:grid;grid-template-columns:1fr 90px 36px;gap:8px;align-items:center;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:500">${escapeHtml(ing.name)}</span>
+          <input type="number" value="${ing.amount}" min="1" placeholder="g"
+            onchange="recipeIngredients[${i}].amount=parseFloat(this.value)||0;renderRecipeIngredientRows()"
+            style="font-size:13px;padding:8px;text-align:center">
+          <button onclick="recipeIngredients.splice(${i},1);renderRecipeIngredientRows()"
+            style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:16px;color:#dc2626;padding:4px">×</button>
+        </div>`;
+    }).join('');
+    document.getElementById('recipe-ingredient-rows').innerHTML = html;
+    document.getElementById('recipe-macro-preview').innerHTML = recipeIngredients.length ? `
+      <div style="background:var(--blue-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">KCAL</div>
+        <div style="font-size:18px;font-weight:700;color:var(--blue)">${Math.round(kcal)}</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">PROT</div>
+        <div style="font-size:18px;font-weight:700;color:#16a34a">${p.toFixed(1)}g</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">CARB</div>
+        <div style="font-size:18px;font-weight:700;color:#d97706">${c.toFixed(1)}g</div>
+      </div>
+      <div style="background:var(--gray-light);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);font-weight:600">GRAS</div>
+        <div style="font-size:18px;font-weight:700;color:#dc2626">${f.toFixed(1)}g</div>
+      </div>` : '';
+  }
+
+  async function saveRecipe() {
+    const name = document.getElementById('recipe-name').value.trim();
+    if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+    const payload = { name, notes: document.getElementById('recipe-notes').value.trim()||null,
+      total_grams: parseFloat(document.getElementById('recipe-grams').value)||null, user_id: currentUser.id };
+    let recipeId = editingRecipeId;
+    if (editingRecipeId) {
+      await db.from('recipes').update(payload).eq('id', editingRecipeId);
+      await db.from('recipe_ingredients').delete().eq('recipe_id', editingRecipeId);
+    } else {
+      const { data } = await db.from('recipes').insert(payload).select().single();
+      recipeId = data.id;
+    }
+    if (recipeIngredients.length > 0) {
+      await db.from('recipe_ingredients').insert(recipeIngredients.map(ing => ({
+        recipe_id: recipeId, food_id: ing.food_id||null, off_id: ing.off_id||null,
+        off_name: ing.name, off_calories: ing.kcal, off_protein: ing.protein,
+        off_carbs: ing.carbs, off_fat: ing.fat, amount_grams: ing.amount
+      })));
+    }
+    showToast(editingRecipeId ? 'Receta actualizada' : 'Receta guardada');
+    closeRecipeModal();
+    renderRecipesList();
+  }
+
+  async function deleteRecipe(id) {
+    if (!confirm('¿Eliminar esta receta?')) return;
+    await db.from('recipes').delete().eq('id', id);
+    showToast('Receta eliminada');
+    renderRecipesList();
+  }
+
+  document.getElementById('add-food-modal').addEventListener('click', function(e) { if (e.target === this) closeAddFoodModal(); });
+  document.getElementById('food-modal').addEventListener('click', function(e) { if (e.target === this) closeFoodModal(); });
+  document.getElementById('recipe-modal').addEventListener('click', function(e) { if (e.target === this) closeRecipeModal(); });
+
+  document.getElementById('routine-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeRoutineModal();
+  });
+  document.getElementById('session-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeSessionModal();
+  });
+
 </script>
 </body>
 </html>
