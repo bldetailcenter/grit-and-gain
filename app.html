@@ -2791,7 +2791,23 @@
 
   function selectMyRecipe(id) {
     const r = allRecipes.find(x => x.id === id);
-    addFoodSelected = { type:'recipe', id:r.id, name:r.name, kcal:r._kcal||0, protein:r._protein||0, carbs:r._carbs||0, fat:r._fat||0 };
+    let kcal=0, protein=0, carbs=0, fat=0;
+    (r.recipe_ingredients||[]).forEach(ing => {
+      const factor = (ing.amount_grams||0) / 100;
+      kcal    += (parseFloat(ing.off_calories)||0) * factor;
+      protein += (parseFloat(ing.off_protein)||0)  * factor;
+      carbs   += (parseFloat(ing.off_carbs)||0)    * factor;
+      fat     += (parseFloat(ing.off_fat)||0)      * factor;
+    });
+    const totalGrams = r.total_grams || null;
+    if (totalGrams) {
+      const f100 = 100 / totalGrams;
+      kcal *= f100; protein *= f100; carbs *= f100; fat *= f100;
+    }
+    addFoodSelected = { type:'recipe', id:r.id, name:r.name,
+      kcal: Math.round(kcal), protein: parseFloat(protein.toFixed(1)),
+      carbs: parseFloat(carbs.toFixed(1)), fat: parseFloat(fat.toFixed(1))
+    };
     showAddFoodSelected();
   }
 
@@ -3033,12 +3049,15 @@
       const data = await fetchOFF(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=5&fields=id,product_name,nutriments`);
       (data.products||[]).filter(p=>p.product_name&&p.nutriments).slice(0,5).forEach(p => {
         const n = p.nutriments;
-        const kcal = n['energy-kcal_100g'] || Math.round((n['energy_100g']||0)/4.18);
-        html += `<div onclick="addRecipeIngredient({type:'off',id:'${p.id}',name:${JSON.stringify(p.product_name)},kcal:${kcal},protein:${n.proteins_100g||0},carbs:${n.carbohydrates_100g||0},fat:${n.fat_100g||0}})"
+        const kcal = parseFloat(n['energy-kcal_100g'] || (n['energy_100g']||0)/4.18) || 0;
+        const protein = parseFloat(n.proteins_100g) || 0;
+        const carbs = parseFloat(n.carbohydrates_100g) || 0;
+        const fat = parseFloat(n.fat_100g) || 0;
+        html += `<div onclick="addRecipeIngredient({type:'off',id:'${p.id}',name:${JSON.stringify(p.product_name)},kcal:${kcal},protein:${protein},carbs:${carbs},fat:${fat}})"
           style="padding:8px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
           onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''">
           <span style="font-weight:500">${escapeHtml(p.product_name)}</span>
-          <span style="color:var(--gray);font-size:11px;margin-left:8px">${kcal} kcal/100g</span>
+          <span style="color:var(--gray);font-size:11px;margin-left:8px">${Math.round(kcal)} kcal/100g</span>
         </div>`;
       });
     } catch(e) {}
@@ -3046,7 +3065,14 @@
   }
 
   function addRecipeIngredient(item) {
-    recipeIngredients.push({...item, amount: 100});
+    recipeIngredients.push({
+      ...item,
+      kcal: parseFloat(item.kcal) || 0,
+      protein: parseFloat(item.protein) || 0,
+      carbs: parseFloat(item.carbs) || 0,
+      fat: parseFloat(item.fat) || 0,
+      amount: 100
+    });
     document.getElementById('recipe-ing-results').innerHTML = '';
     document.getElementById('recipe-ing-search').value = '';
     renderRecipeIngredientRows();
