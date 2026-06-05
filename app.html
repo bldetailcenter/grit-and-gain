@@ -2418,28 +2418,52 @@
     });
   }
 
+  async function fetchOFF(url, retries = 2) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+      return await res.json();
+    } catch(e) {
+      clearTimeout(timeout);
+      if (retries > 0) {
+        await new Promise(r => setTimeout(r, 1000));
+        return fetchOFF(url, retries - 1);
+      }
+      throw e;
+    }
+  }
+
   async function searchOFF() {
     const q = document.getElementById('off-search-input').value.trim();
     if (!q) return;
     const container = document.getElementById('off-results');
-    container.innerHTML = '<div style="text-align:center;padding:12px;color:var(--gray);font-size:13px">Buscando...</div>';
+    container.innerHTML = '<div style="text-align:center;padding:12px;color:var(--gray);font-size:13px">🔍 Buscando...</div>';
     try {
-      const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&fields=id,product_name,nutriments,serving_size`);
-      const data = await res.json();
+      const data = await fetchOFF(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&fields=id,product_name,nutriments`);
       const products = (data.products || []).filter(p => p.product_name && p.nutriments);
-      if (products.length === 0) { container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px">Sin resultados. Prueba otro término.</div>'; return; }
+      if (products.length === 0) {
+        container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px">Sin resultados. Prueba otro término o búscalo en español/inglés.</div>';
+        return;
+      }
       container.innerHTML = products.map(p => {
         const n = p.nutriments;
-        const kcal = n['energy-kcal_100g'] || n['energy_100g'] ? Math.round((n['energy-kcal_100g'] || n['energy_100g']/4.18)) : '?';
+        const kcal = n['energy-kcal_100g'] ? Math.round(n['energy-kcal_100g']) : n['energy_100g'] ? Math.round(n['energy_100g']/4.18) : '?';
         return `<div onclick="selectOFFProduct(${JSON.stringify(p).replace(/"/g,'&quot;')})"
           style="padding:10px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px"
-          onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''"
-        >
+          onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background=''">
           <div style="font-weight:500">${escapeHtml(p.product_name)}</div>
           <div style="color:var(--gray);font-size:11px">${kcal} kcal | P:${(n.proteins_100g||0).toFixed(1)}g C:${(n.carbohydrates_100g||0).toFixed(1)}g G:${(n.fat_100g||0).toFixed(1)}g · por 100g</div>
         </div>`;
       }).join('');
-    } catch(e) { container.innerHTML = '<div style="padding:12px;color:var(--error);font-size:13px">Error al conectar con Open Food Facts.</div>'; }
+    } catch(e) {
+      container.innerHTML = `<div style="padding:12px;font-size:13px">
+        <div style="color:var(--error);margin-bottom:8px">⚠️ No se pudo conectar con Open Food Facts.</div>
+        <div style="color:var(--gray);margin-bottom:10px">Puedes buscar el alimento directamente en <a href="https://es.openfoodfacts.org" target="_blank" style="color:var(--blue)">openfoodfacts.org</a> e introducirlo manualmente en "Mis alimentos".</div>
+        <button class="btn-secondary" style="font-size:12px" onclick="searchOFF()">🔄 Reintentar</button>
+      </div>`;
+    }
   }
 
   function selectOFFProduct(p) {
@@ -2727,8 +2751,7 @@
       </div>`).join('');
     // Buscar en OFF
     try {
-      const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=5&fields=id,product_name,nutriments`);
-      const data = await res.json();
+      const data = await fetchOFF(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=5&fields=id,product_name,nutriments`);
       (data.products||[]).filter(p=>p.product_name&&p.nutriments).slice(0,5).forEach(p => {
         const n = p.nutriments;
         const kcal = n['energy-kcal_100g'] || Math.round((n['energy_100g']||0)/4.18);
