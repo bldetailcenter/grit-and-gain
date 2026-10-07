@@ -1375,7 +1375,8 @@
         .sort((a,b) => a.order_index - b.order_index)
         .map(ce => {
           let detail = ce.exercises?.name || '';
-          if (ce.reps) detail += ` · ${ce.reps} reps`;
+          const unit = ce.unit || 'reps';
+          if (ce.reps) detail += ` · ${ce.reps} ${unit}`;
           if (ce.suggested_weight) detail += ` · ${ce.suggested_weight}kg`;
           return `<span style="display:inline-block;background:var(--gray-light);border-radius:4px;padding:2px 8px;font-size:12px;margin:2px">${escapeHtml(detail)}</span>`;
         }).join('');
@@ -1418,7 +1419,7 @@
       document.getElementById('circ-type').value = c.type || 'amrap';
       document.getElementById('circ-notes').value = c.notes || '';
       const exs = (c.circuit_exercises || []).sort((a,b) => a.order_index - b.order_index);
-      exs.forEach(ce => addCircuitExerciseRow(ce.exercise_id, ce.reps, ce.suggested_weight));
+      exs.forEach(ce => addCircuitExerciseRow(ce.exercise_id, ce.reps, ce.suggested_weight, ce.unit || 'reps'));
     } else {
       document.getElementById('circ-name').value = '';
       document.getElementById('circ-type').value = 'amrap';
@@ -1433,17 +1434,23 @@
     editingCircuitId = null;
   }
 
-  function addCircuitExerciseRow(exerciseId = '', reps = '', weight = '') {
+  function addCircuitExerciseRow(exerciseId = '', reps = '', weight = '', unit = 'reps') {
     const rowId = 'cer-' + Date.now() + Math.random();
     circuitExerciseRows.push(rowId);
     const opts = allExercises.map(e =>
       `<option value="${e.id}" ${e.id === exerciseId ? 'selected' : ''}>${escapeHtml(e.name)}</option>`
     ).join('');
     const html = `
-      <div id="${rowId}" style="display:grid;grid-template-columns:1fr 80px 90px 36px;gap:8px;margin-bottom:8px;align-items:center">
+      <div id="${rowId}" style="display:grid;grid-template-columns:1fr 90px 70px 80px 36px;gap:8px;margin-bottom:8px;align-items:center">
         <select style="font-size:13px;padding:8px 10px"><option value="">-- Ejercicio --</option>${opts}</select>
-        <input type="number" placeholder="Reps" value="${reps}" style="font-size:13px;padding:8px 10px" min="0">
-        <input type="number" placeholder="Kg" value="${weight}" style="font-size:13px;padding:8px 10px" min="0" step="0.5">
+        <select style="font-size:13px;padding:8px 6px">
+          <option value="reps" ${unit==='reps'?'selected':''}>Reps</option>
+          <option value="segundos" ${unit==='segundos'?'selected':''}>Seg</option>
+          <option value="metros" ${unit==='metros'?'selected':''}>Metros</option>
+          <option value="calorias" ${unit==='calorias'?'selected':''}>Kcal</option>
+        </select>
+        <input type="number" placeholder="Cant." value="${reps}" style="font-size:13px;padding:8px 6px;text-align:center" min="0">
+        <input type="number" placeholder="Kg" value="${weight}" style="font-size:13px;padding:8px 6px;text-align:center" min="0" step="0.5">
         <button onclick="removeRow('${rowId}')" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:16px;color:#dc2626;padding:4px">×</button>
       </div>`;
     document.getElementById('circuit-exercises-rows').insertAdjacentHTML('beforeend', html);
@@ -1476,13 +1483,15 @@
     const rows = document.getElementById('circuit-exercises-rows').querySelectorAll('div[id^="cer-"]');
     const exPayload = [];
     rows.forEach((row, i) => {
-      const sel = row.querySelector('select');
+      const sels = row.querySelectorAll('select');
       const inputs = row.querySelectorAll('input');
-      const exId = sel?.value;
+      const exId = sels[0]?.value;
+      const unit = sels[1]?.value || 'reps';
       if (!exId) return;
       exPayload.push({
         circuit_id: circuitId,
         exercise_id: exId,
+        unit: unit,
         reps: parseInt(inputs[0]?.value) || null,
         suggested_weight: parseFloat(inputs[1]?.value) || null,
         order_index: i
