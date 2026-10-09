@@ -1,0 +1,18 @@
+{
+  "name": "Grit & Gain",
+  "short_name": "Grit&Gain",
+  "description": "Tu app de fitness y nutrición",
+  "start_url": "/grit-and-gain/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#1a56db",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-512.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
