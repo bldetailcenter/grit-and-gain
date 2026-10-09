@@ -1754,6 +1754,8 @@
 
   async function renderWorkoutExercises() {
     const container = document.getElementById('wo-exercises-container');
+    // Precargar datos de última sesión de circuitos antes de construir HTML
+    await Promise.all(workoutCircuits.map(c => fetchLastCircuitSession(c.circuitId)));
     let html = '';
     workoutExercises.forEach((ex, exIdx) => {
       const hint = [];
@@ -1808,7 +1810,7 @@
       const typeLabel = CIRCUIT_TYPE_LABELS[circ.type] || circ.type;
       const typeColor = CIRCUIT_TYPE_COLORS[circ.type] || '#6b7280';
       const circData = allCircuits.find(c => c.id === circ.circuitId);
-      const lastCirc = await fetchLastCircuitSession(circ.circuitId);
+      const lastCirc = circuitLastSession[circ.circuitId] || null;
 
       // Notas del circuito original
       const circNotes = circData?.notes || '';
