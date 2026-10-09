@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grit & Gain</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a56db">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Grit&Gain">
+  <link rel="apple-touch-icon" href="icon-512.svg">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -480,6 +486,7 @@
   <div class="sidebar-footer">
     <div class="user-info" id="user-email"></div>
     <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+    <button class="btn-logout" style="margin-top:6px" onclick="openNotifModal()">🔔 Recordatorios</button>
   </div>
 </aside>
 
@@ -742,6 +749,35 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeExerciseModal()">Cancelar</button>
       <button class="btn-primary" onclick="saveExercise()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECORDATORIOS -->
+<div class="modal-overlay" id="notif-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">🔔 Recordatorios</div>
+    <div style="font-size:13px;color:var(--gray);margin-bottom:20px">Recibe una notificación semanal para registrar tu peso y fotos de progreso.</div>
+    <div class="form-group">
+      <label>Día de la semana</label>
+      <select id="notif-day">
+        <option value="1">Lunes</option>
+        <option value="2">Martes</option>
+        <option value="3">Miércoles</option>
+        <option value="4">Jueves</option>
+        <option value="5">Viernes</option>
+        <option value="6">Sábado</option>
+        <option value="0">Domingo</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Hora</label>
+      <input type="time" id="notif-time" value="09:00">
+    </div>
+    <div id="notif-status" style="font-size:13px;padding:10px 14px;border-radius:8px;margin-bottom:16px;display:none"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeNotifModal()">Cerrar</button>
+      <button class="btn-primary" onclick="saveNotifSettings()">Activar recordatorio</button>
     </div>
   </div>
 </div>
@@ -1340,6 +1376,64 @@
 
   init();
 
+  // ── PWA + NOTIFICACIONES ──
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      const saved = localStorage.getItem('notif_settings');
+      if (saved) {
+        const { day, hour } = JSON.parse(saved);
+        if (reg.active) reg.active.postMessage({ type: 'SCHEDULE_REMINDER', day, hour });
+      }
+    }).catch(console.error);
+  }
+
+  function openNotifModal() {
+    const saved = localStorage.getItem('notif_settings');
+    if (saved) {
+      const { day, hour } = JSON.parse(saved);
+      document.getElementById('notif-day').value = day;
+      document.getElementById('notif-time').value = String(hour).padStart(2,'0') + ':00';
+    }
+    const status = document.getElementById('notif-status');
+    if (Notification.permission === 'granted') {
+      status.textContent = '✅ Notificaciones activadas';
+      status.style.cssText = 'background:#f0fdf4;color:#16a34a;display:block';
+    } else if (Notification.permission === 'denied') {
+      status.textContent = '❌ Notificaciones bloqueadas. Actívalas en ajustes del navegador.';
+      status.style.cssText = 'background:#fef2f2;color:#dc2626;display:block';
+    } else {
+      status.style.display = 'none';
+    }
+    document.getElementById('notif-modal').classList.add('open');
+  }
+
+  function closeNotifModal() { document.getElementById('notif-modal').classList.remove('open'); }
+
+  async function saveNotifSettings() {
+    const day = parseInt(document.getElementById('notif-day').value);
+    const hour = parseInt(document.getElementById('notif-time').value.split(':')[0]);
+    const status = document.getElementById('notif-status');
+    if (!('Notification' in window)) {
+      status.textContent = '❌ Tu navegador no soporta notificaciones.';
+      status.style.cssText = 'background:#fef2f2;color:#dc2626;display:block'; return;
+    }
+    let perm = Notification.permission;
+    if (perm === 'default') perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      status.textContent = '❌ Permiso denegado. Activa las notificaciones en ajustes del navegador.';
+      status.style.cssText = 'background:#fef2f2;color:#dc2626;display:block'; return;
+    }
+    localStorage.setItem('notif_settings', JSON.stringify({ day, hour }));
+    const reg = await navigator.serviceWorker.ready;
+    reg.active?.postMessage({ type: 'SCHEDULE_REMINDER', day, hour });
+    status.textContent = '✅ Recordatorio activado. Te avisaremos cada semana.';
+    status.style.cssText = 'background:#f0fdf4;color:#16a34a;display:block';
+    showToast('Recordatorio activado');
+  }
+
+  document.getElementById('notif-modal').addEventListener('click', function(e) { if (e.target === this) closeNotifModal(); });
+
   // ── CIRCUITOS ──
 
   let allCircuits = [];
@@ -1530,6 +1624,19 @@
   let activeSessionId = null;
   let exerciseBestRM = {};
   let exerciseLastSession = {}; // cache: exerciseId -> [{reps, weight}] última sesión
+  let circuitLastSession = {}; // cache: circuitId -> última sesión
+
+  async function fetchLastCircuitSession(circuitId) {
+    if (circuitLastSession[circuitId] !== undefined) return circuitLastSession[circuitId];
+    const { data } = await db.from('workout_circuits')
+      .select('rounds, duration_minutes, notes, workouts(date)')
+      .eq('circuit_id', circuitId)
+      .order('workouts(date)', { ascending: false })
+      .limit(1);
+    const last = data?.[0] || null;
+    circuitLastSession[circuitId] = last;
+    return last;
+  }
 
   async function fetchLastSession(exerciseId) {
     if (exerciseLastSession[exerciseId] !== undefined) return exerciseLastSession[exerciseId];
@@ -1645,7 +1752,7 @@
     showWorkoutStep(3);
   }
 
-  function renderWorkoutExercises() {
+  async function renderWorkoutExercises() {
     const container = document.getElementById('wo-exercises-container');
     let html = '';
     workoutExercises.forEach((ex, exIdx) => {
@@ -1696,37 +1803,70 @@
           <button class="btn-secondary" style="width:100%;margin-top:4px;font-size:13px" onclick="addSet(${exIdx})">+ Añadir serie</button>
         </div>`;
     });
-    workoutCircuits.forEach((circ, cIdx) => {
+    for (let cIdx = 0; cIdx < workoutCircuits.length; cIdx++) {
+      const circ = workoutCircuits[cIdx];
       const typeLabel = CIRCUIT_TYPE_LABELS[circ.type] || circ.type;
       const typeColor = CIRCUIT_TYPE_COLORS[circ.type] || '#6b7280';
       const circData = allCircuits.find(c => c.id === circ.circuitId);
-      const exWeightsHtml = (circData?.circuit_exercises || []).sort((a,b) => a.order_index - b.order_index)
-        .map(ce => `
-          <div style="display:grid;grid-template-columns:1fr 100px;gap:8px;align-items:center;margin-bottom:8px">
-            <span style="font-size:13px">${escapeHtml(ce.exercises?.name || '')}</span>
-            <input type="number" placeholder="Kg" min="0" step="0.5" value="${circ.exerciseWeights[ce.exercise_id]||''}"
-              onchange="updateCircuitWeight(${cIdx},'${ce.exercise_id}',this.value)" style="font-size:13px;padding:8px;text-align:center">
-          </div>`).join('');
+      const lastCirc = await fetchLastCircuitSession(circ.circuitId);
+
+      // Notas del circuito original
+      const circNotes = circData?.notes || '';
+
+      // Ejercicios con unidad, reps orientativas y campo de peso real
+      const exWeightsHtml = (circData?.circuit_exercises || [])
+        .sort((a,b) => a.order_index - b.order_index)
+        .map(ce => {
+          const unit = ce.unit || 'reps';
+          const hint = ce.reps ? `${ce.reps} ${unit}` : '';
+          const hintHtml = hint ? `<span style="font-size:11px;color:var(--blue);background:var(--blue-light);padding:1px 6px;border-radius:8px;margin-left:6px">📌 ${hint}</span>` : '';
+          const showKg = unit === 'reps' || ce.suggested_weight;
+          return `
+            <div style="display:grid;grid-template-columns:1fr ${showKg ? '100px' : ''};gap:8px;align-items:center;margin-bottom:8px">
+              <div style="font-size:13px;display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+                ${escapeHtml(ce.exercises?.name || '')}${hintHtml}
+              </div>
+              ${showKg ? `<input type="number" placeholder="${ce.suggested_weight ? ce.suggested_weight+'kg' : 'Kg'}" min="0" step="0.5" value="${circ.exerciseWeights[ce.exercise_id]||''}"
+                onchange="updateCircuitWeight(${cIdx},'${ce.exercise_id}',this.value)" style="font-size:13px;padding:8px;text-align:center">` : ''}
+            </div>`;
+        }).join('');
+
+      // Placeholders de última sesión
+      const prevRounds = lastCirc?.rounds || '';
+      const prevDuration = lastCirc?.duration_minutes || '';
+      const prevNotes = lastCirc?.notes || '';
+      const lastHint = (prevRounds || prevDuration)
+        ? `<div style="font-size:11px;color:#9ca3af;margin-top:4px">Última vez: ${prevRounds ? prevRounds+' rondas' : ''}${prevRounds && prevDuration ? ' · ' : ''}${prevDuration ? prevDuration+' min' : ''}${prevNotes ? ' · '+prevNotes : ''}</div>`
+        : '';
+
       html += `
         <div class="card" style="margin-bottom:14px;border-left:4px solid ${typeColor}">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div>
               <span style="font-weight:600;font-size:15px">${escapeHtml(circ.name)}</span>
               <span style="font-size:11px;font-weight:600;color:white;background:${typeColor};padding:2px 8px;border-radius:10px;margin-left:8px">${typeLabel}</span>
             </div>
             <button class="btn-danger" style="font-size:11px;padding:4px 8px" onclick="removeWorkoutCircuit(${cIdx})">Quitar</button>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-            <div><label style="font-size:12px">Rondas</label>
-              <input type="number" min="0" value="${circ.rounds||''}" onchange="updateCircuit(${cIdx},'rounds',this.value)" style="font-size:13px;padding:8px;margin-top:4px"></div>
-            <div><label style="font-size:12px">Duración (min)</label>
-              <input type="number" min="0" step="0.5" value="${circ.duration||''}" onchange="updateCircuit(${cIdx},'duration',this.value)" style="font-size:13px;padding:8px;margin-top:4px"></div>
+          ${circNotes ? `<div style="font-size:12px;color:var(--gray);background:var(--gray-light);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-style:italic">${escapeHtml(circNotes)}</div>` : ''}
+          ${exWeightsHtml ? `<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--gray);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px">Ejercicios</div>${exWeightsHtml}</div>` : ''}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div>
+              <label style="font-size:12px">Rondas</label>
+              <input type="number" min="0" placeholder="${prevRounds || '0'}" value="${circ.rounds||''}" onchange="updateCircuit(${cIdx},'rounds',this.value)" style="font-size:13px;padding:8px;margin-top:4px${prevRounds && !circ.rounds ? ';background:#f9fafb' : ''}">
+            </div>
+            <div>
+              <label style="font-size:12px">Duración (min)</label>
+              <input type="number" min="0" step="0.5" placeholder="${prevDuration || '0'}" value="${circ.duration||''}" onchange="updateCircuit(${cIdx},'duration',this.value)" style="font-size:13px;padding:8px;margin-top:4px${prevDuration && !circ.duration ? ';background:#f9fafb' : ''}">
+            </div>
           </div>
-          ${exWeightsHtml ? `<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:8px">PESOS USADOS</div>${exWeightsHtml}</div>` : ''}
-          <div><label style="font-size:12px">Notas</label>
-            <input type="text" placeholder="Observaciones..." value="${circ.notes||''}" onchange="updateCircuit(${cIdx},'notes',this.value)" style="font-size:13px;padding:8px;margin-top:4px"></div>
+          ${lastHint}
+          <div style="margin-top:10px">
+            <label style="font-size:12px">Notas</label>
+            <input type="text" placeholder="${prevNotes || 'Observaciones...'}" value="${circ.notes||''}" onchange="updateCircuit(${cIdx},'notes',this.value)" style="font-size:13px;padding:8px;margin-top:4px${prevNotes && !circ.notes ? ';background:#f9fafb' : ''}">
+          </div>
         </div>`;
-    });
+    }
     container.innerHTML = html || '<div class="empty" style="padding:20px"><p>Listo para atacar. Añade ejercicios o circuitos.</p></div>';
   }
 
@@ -1783,10 +1923,10 @@
     const ex = allExercises.find(e => e.id === id);
     workoutExercises.push({exerciseId:id, name:ex.name, sets:[], suggested_sets:null, suggested_reps:null, suggested_weight:null});
     sel.value = '';
-    renderWorkoutExercises();
+    await renderWorkoutExercises();
   }
 
-  function addWorkoutCircuit() {
+  async function addWorkoutCircuit() {
     const sel = document.getElementById('wo-add-circuit-select');
     const id = sel.value;
     if (!id) { showToast('Selecciona un circuito', 'error'); return; }
