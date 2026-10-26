@@ -1918,7 +1918,7 @@
   function updateCircuit(cIdx, field, value) { workoutCircuits[cIdx][field] = value; }
   function updateCircuitWeight(cIdx, exId, value) { workoutCircuits[cIdx].exerciseWeights[exId] = parseFloat(value)||null; }
 
-  function addWorkoutExercise() {
+  async function addWorkoutExercise() {
     const sel = document.getElementById('wo-add-exercise-select');
     const id = sel.value;
     if (!id) { showToast('Selecciona un ejercicio', 'error'); return; }
