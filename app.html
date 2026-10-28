@@ -655,10 +655,10 @@
   </div>
   <div class="page" id="page-photos">
     <div class="page-header">
-      <h2 class="page-title">Fotos de progreso</h2>
-      <button class="btn-primary" onclick="openPhotoModal()">+ Añadir foto</button>
+      <h2 class="page-title">Progreso físico</h2>
+      <button class="btn-primary" onclick="openPhotoModal()">+ Nuevo registro</button>
     </div>
-    <div id="photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px"></div>
+    <div id="photos-grid"></div>
   </div>
 
   <!-- NUTRICIÓN: REGISTRO DIARIO -->
@@ -1003,30 +1003,41 @@
 
 <!-- MODAL FOTO -->
 <div class="modal-overlay" id="photo-modal">
-  <div class="modal" style="max-width:460px">
-    <div class="modal-title" id="photo-modal-title">Añadir foto</div>
-    <div class="form-group">
-      <label>Fecha *</label>
-      <input type="date" id="photo-date">
+  <div class="modal" style="max-width:520px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">Nuevo registro de progreso</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label>Fecha *</label>
+        <input type="date" id="photo-date">
+      </div>
+      <div class="form-group">
+        <label>Peso corporal (kg)</label>
+        <input type="number" id="photo-weight" placeholder="Ej: 80.5" min="0" step="0.1">
+      </div>
     </div>
-    <div class="form-group">
-      <label>Peso corporal (kg)</label>
-      <input type="number" id="photo-weight" placeholder="Ej: 80.5" min="0" step="0.1">
-    </div>
-    <div class="form-group">
-      <label>Foto *</label>
-      <input type="file" id="photo-file" accept="image/*" style="padding:8px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Foto de frente</div>
+        <input type="file" id="photo-file-front" accept="image/*" style="padding:8px;width:100%;border:1.5px dashed var(--border);border-radius:8px;font-size:12px" onchange="previewPhoto('front',this)">
+        <div id="photo-preview-front" style="display:none;margin-top:8px">
+          <img id="photo-preview-front-img" style="width:100%;border-radius:8px;height:140px;object-fit:cover">
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Foto de perfil</div>
+        <input type="file" id="photo-file-side" accept="image/*" style="padding:8px;width:100%;border:1.5px dashed var(--border);border-radius:8px;font-size:12px" onchange="previewPhoto('side',this)">
+        <div id="photo-preview-side" style="display:none;margin-top:8px">
+          <img id="photo-preview-side-img" style="width:100%;border-radius:8px;height:140px;object-fit:cover">
+        </div>
+      </div>
     </div>
     <div class="form-group">
       <label>Notas</label>
-      <textarea id="photo-notes" placeholder="Observaciones..."></textarea>
-    </div>
-    <div id="photo-preview" style="display:none;margin-bottom:12px">
-      <img id="photo-preview-img" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover">
+      <textarea id="photo-notes" placeholder="Cómo te encuentras, observaciones..."></textarea>
     </div>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closePhotoModal()">Cancelar</button>
-      <button class="btn-primary" id="photo-save-btn" onclick="savePhoto()">Guardar</button>
+      <button class="btn-primary" id="photo-save-btn" onclick="savePhoto()">Guardar registro</button>
     </div>
   </div>
 </div>
@@ -2461,7 +2472,7 @@
 
   async function loadPhotos() {
     const { data, error } = await db.from('progress_photos')
-      .select('*').order('date', { ascending: false });
+      .select('*').order('date', { ascending: false }).order('photo_side');
     if (error) { showToast('Error al cargar fotos', 'error'); return; }
     renderPhotos(data || []);
   }
@@ -2469,23 +2480,44 @@
   function renderPhotos(list) {
     const grid = document.getElementById('photos-grid');
     if (list.length === 0) {
-      grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📸</div><p>No hay fotos aún. ¡Añade la primera!</p></div>';
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">📸</div><p>Sin fotos. El progreso que no se documenta no existe.</p><small>Añade tu primer registro y deja constancia.</small></div>';
       return;
     }
-    grid.innerHTML = list.map(p => {
-      const date = new Date(p.date + 'T12:00:00').toLocaleDateString('es-ES', {day:'2-digit', month:'short', year:'numeric'});
+    // Agrupar por fecha
+    const byDate = {};
+    list.forEach(p => {
+      if (!byDate[p.date]) byDate[p.date] = [];
+      byDate[p.date].push(p);
+    });
+    grid.innerHTML = Object.entries(byDate).map(([date, photos]) => {
+      const dateStr = new Date(date + 'T12:00:00').toLocaleDateString('es-ES', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+      const weight = photos[0]?.weight;
+      const notes = photos[0]?.notes;
+      const front = photos.find(p => p.photo_side === 'frente' || !p.photo_side);
+      const side = photos.find(p => p.photo_side === 'perfil');
       return `
-        <div onclick="viewPhoto('${p.id}')" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1.5px solid var(--border);transition:border-color 0.15s"
-          onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
-          <div style="height:180px;background:var(--gray-light);overflow:hidden">
-            ${p.photo_url
-              ? `<img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">`
-              : `<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:40px">📷</div>`}
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div>
+              <div style="font-weight:600;font-size:15px">${dateStr.charAt(0).toUpperCase()+dateStr.slice(1)}</div>
+              ${weight ? `<div style="font-size:18px;font-weight:700;color:var(--blue);margin-top:2px">${weight} kg</div>` : ''}
+              ${notes ? `<div style="font-size:12px;color:var(--gray);margin-top:4px;font-style:italic">${escapeHtml(notes)}</div>` : ''}
+            </div>
+            <button class="btn-danger" style="font-size:11px;padding:4px 10px" onclick="deletePhotoEntry('${date}')">Eliminar</button>
           </div>
-          <div style="padding:12px">
-            <div style="font-weight:600;font-size:14px">${date}</div>
-            ${p.weight ? `<div style="font-size:13px;color:var(--blue);margin-top:2px">${p.weight} kg</div>` : ''}
-            ${p.notes ? `<div style="font-size:12px;color:var(--gray);margin-top:4px">${escapeHtml(p.notes)}</div>` : ''}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Frente</div>
+              ${front?.photo_url
+                ? `<img src="${front.photo_url}" onclick="viewPhoto('${front.id}')" style="width:100%;border-radius:8px;height:200px;object-fit:cover;cursor:pointer">`
+                : `<div style="height:200px;background:var(--gray-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--gray)">📷</div>`}
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Perfil</div>
+              ${side?.photo_url
+                ? `<img src="${side.photo_url}" onclick="viewPhoto('${side.id}')" style="width:100%;border-radius:8px;height:200px;object-fit:cover;cursor:pointer">`
+                : `<div style="height:200px;background:var(--gray-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--gray)">📷</div>`}
+            </div>
           </div>
         </div>`;
     }).join('');
@@ -2495,9 +2527,11 @@
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('photo-date').value = today;
     document.getElementById('photo-weight').value = '';
-    document.getElementById('photo-file').value = '';
+    document.getElementById('photo-file-front').value = '';
+    document.getElementById('photo-file-side').value = '';
     document.getElementById('photo-notes').value = '';
-    document.getElementById('photo-preview').style.display = 'none';
+    document.getElementById('photo-preview-front').style.display = 'none';
+    document.getElementById('photo-preview-side').style.display = 'none';
     document.getElementById('photo-modal').classList.add('open');
   }
 
@@ -2505,66 +2539,65 @@
     document.getElementById('photo-modal').classList.remove('open');
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('photo-file');
-    if (fileInput) {
-      fileInput.addEventListener('change', function() {
-        const file = this.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-          document.getElementById('photo-preview-img').src = e.target.result;
-          document.getElementById('photo-preview').style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  });
+  function previewPhoto(side, input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('photo-preview-'+side+'-img').src = e.target.result;
+      document.getElementById('photo-preview-'+side).style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function uploadPhoto(file, side) {
+    if (!file) return null;
+    const ext = file.name.split('.').pop();
+    const path = `${currentUser.id}/${Date.now()}-${side}.${ext}`;
+    const { error } = await db.storage.from('progress-photos').upload(path, file, { upsert: false });
+    if (error) return null;
+    const { data } = db.storage.from('progress-photos').getPublicUrl(path);
+    return data?.publicUrl || null;
+  }
 
   async function savePhoto() {
     const date = document.getElementById('photo-date').value;
     const weight = document.getElementById('photo-weight').value;
     const notes = document.getElementById('photo-notes').value.trim();
-    const file = document.getElementById('photo-file').files[0];
+    const fileFront = document.getElementById('photo-file-front').files[0];
+    const fileSide = document.getElementById('photo-file-side').files[0];
 
     if (!date) { showToast('La fecha es obligatoria', 'error'); return; }
+    if (!fileFront && !fileSide) { showToast('Añade al menos una foto', 'error'); return; }
 
     const btn = document.getElementById('photo-save-btn');
     btn.disabled = true; btn.textContent = 'Guardando...';
 
-    let photoUrl = null;
-
-    if (file) {
-      const ext = file.name.split('.').pop();
-      const path = `${currentUser.id}/${Date.now()}.${ext}`;
-      const { data: uploadData, error: uploadError } = await db.storage
-        .from('progress-photos')
-        .upload(path, file, { upsert: false });
-
-      if (uploadError) {
-        showToast('Error al subir la foto: ' + uploadError.message, 'error');
-        btn.disabled = false; btn.textContent = 'Guardar';
-        return;
-      }
-
-      const { data: urlData } = db.storage.from('progress-photos').getPublicUrl(path);
-      photoUrl = urlData?.publicUrl || null;
+    const inserts = [];
+    if (fileFront) {
+      const url = await uploadPhoto(fileFront, 'front');
+      inserts.push({ user_id: currentUser.id, date, weight: parseFloat(weight)||null, notes: notes||null, photo_url: url, photo_side: 'frente' });
+    }
+    if (fileSide) {
+      const url = await uploadPhoto(fileSide, 'side');
+      inserts.push({ user_id: currentUser.id, date, weight: parseFloat(weight)||null, notes: notes||null, photo_url: url, photo_side: 'perfil' });
     }
 
-    const { error } = await db.from('progress_photos').insert({
-      user_id: currentUser.id,
-      date,
-      weight: parseFloat(weight) || null,
-      notes: notes || null,
-      photo_url: photoUrl
-    });
+    const { error } = await db.from('progress_photos').insert(inserts);
+    if (error) { showToast('Error al guardar', 'error'); btn.disabled = false; btn.textContent = 'Guardar registro'; return; }
 
-    if (error) { showToast('Error al guardar', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; return; }
-
-    showToast('Foto guardada');
+    showToast('Registro guardado');
     closePhotoModal();
     loadPhotos();
-    btn.disabled = false; btn.textContent = 'Guardar';
+    btn.disabled = false; btn.textContent = 'Guardar registro';
+  }
+
+  async function deletePhotoEntry(date) {
+    if (!confirm('¿Eliminar todas las fotos de este registro?')) return;
+    const { error } = await db.from('progress_photos').delete().eq('user_id', currentUser.id).eq('date', date);
+    if (error) { showToast('Error al eliminar', 'error'); return; }
+    showToast('Registro eliminado');
+    loadPhotos();
   }
 
   async function viewPhoto(id) {
