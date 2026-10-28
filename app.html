@@ -482,6 +482,14 @@
     <button class="nav-item" onclick="navigate('recipes')">
       <span class="icon">📖</span> Recetas
     </button>
+
+    <div class="nav-section">Running</div>
+    <button class="nav-item" onclick="navigate('running')">
+      <span class="icon">🏃</span> Nueva carrera
+    </button>
+    <button class="nav-item" onclick="navigate('run-history')">
+      <span class="icon">📈</span> Historial
+    </button>
   </nav>
   <div class="sidebar-footer">
     <div class="user-info" id="user-email"></div>
@@ -726,6 +734,89 @@
       <button class="btn-primary" onclick="openRecipeModal()">+ Nueva receta</button>
     </div>
     <div id="recipes-list"></div>
+  </div>
+
+  <!-- RUNNING: NUEVA CARRERA -->
+  <div class="page" id="page-running">
+    <div class="page-header">
+      <h2 class="page-title">Nueva carrera</h2>
+      <div style="font-size:13px;color:var(--gray)" id="running-date"></div>
+    </div>
+    <div style="max-width:680px">
+      <!-- Datos generales -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">Datos generales</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="run-date">
+          </div>
+          <div class="form-group">
+            <label>Tipo de entrenamiento</label>
+            <select id="run-type" onchange="toggleIntervals()">
+              <option value="rodaje">Rodaje fácil</option>
+              <option value="tempo">Tempo / Umbral</option>
+              <option value="series">Series</option>
+              <option value="cuestas">Cuestas</option>
+              <option value="fartlek">Fartlek</option>
+              <option value="carrera">Carrera / Competición</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Distancia total (km)</label>
+            <input type="number" id="run-distance" min="0" step="0.01" placeholder="Ej: 10.5" oninput="calcPace()">
+          </div>
+          <div class="form-group">
+            <label>Tiempo total (min)</label>
+            <input type="number" id="run-duration" min="0" step="0.5" placeholder="Ej: 52.5" oninput="calcPace()">
+          </div>
+          <div class="form-group">
+            <label>Ritmo medio</label>
+            <input type="text" id="run-pace" placeholder="min/km (calculado)" readonly style="background:var(--gray-light);color:var(--blue);font-weight:600">
+          </div>
+          <div class="form-group">
+            <label>Puls. medias (ppm)</label>
+            <input type="number" id="run-hr" min="0" max="250" placeholder="Ej: 155">
+          </div>
+          <div class="form-group">
+            <label>Calorías quemadas</label>
+            <input type="number" id="run-calories" min="0" placeholder="Ej: 520">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notas</label>
+          <textarea id="run-notes" placeholder="Sensaciones, condiciones, terreno..."></textarea>
+        </div>
+      </div>
+
+      <!-- Series / Cuestas -->
+      <div class="card" id="run-intervals-card" style="margin-bottom:16px;display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px" id="intervals-title">Series</div>
+          <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="addIntervalRow()">+ Añadir</button>
+        </div>
+        <div style="display:grid;grid-template-columns:40px 90px 90px 80px 80px 30px;gap:8px;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:700;color:var(--gray);text-align:center">#</span>
+          <span style="font-size:11px;font-weight:700;color:var(--gray)">Distancia (m)</span>
+          <span style="font-size:11px;font-weight:700;color:var(--gray)">Tiempo (seg)</span>
+          <span style="font-size:11px;font-weight:700;color:var(--gray)">Ritmo</span>
+          <span style="font-size:11px;font-weight:700;color:var(--gray)">Descanso (seg)</span>
+          <span></span>
+        </div>
+        <div id="interval-rows"></div>
+      </div>
+
+      <button class="btn-primary" style="width:100%;padding:14px;font-size:16px" onclick="saveRun()">💾 Guardar carrera</button>
+    </div>
+  </div>
+
+  <!-- RUNNING: HISTORIAL -->
+  <div class="page" id="page-run-history">
+    <div class="page-header">
+      <h2 class="page-title">Historial running</h2>
+    </div>
+    <div id="run-history-list"></div>
   </div>
 
 </main>
@@ -1177,6 +1268,8 @@
     if (page === 'history') loadHistory();
     if (page === 'stats') loadStatsPage();
     if (page === 'photos') loadPhotos();
+    if (page === 'running') initRunningPage();
+    if (page === 'run-history') loadRunHistory();
     if (page === 'nutrition') { initNutritionDate(); loadNutritionGoals().then(() => loadNutritionLog()); }
     if (page === 'foods') renderFoodsList();
     if (page === 'recipes') renderRecipesList();
@@ -2629,6 +2722,213 @@
 
   document.getElementById('photo-modal').addEventListener('click', function(e) { if (e.target === this) closePhotoModal(); });
   document.getElementById('photo-view-modal').addEventListener('click', function(e) { if (e.target === this) closePhotoViewModal(); });
+
+  // ── RUNNING ──
+
+  const RUN_TYPE_LABELS = {
+    rodaje: 'Rodaje fácil', tempo: 'Tempo', series: 'Series',
+    cuestas: 'Cuestas', fartlek: 'Fartlek', carrera: 'Carrera', otro: 'Otro'
+  };
+  const RUN_TYPE_COLORS = {
+    rodaje: '#16a34a', tempo: '#d97706', series: '#1a56db',
+    cuestas: '#7c3aed', fartlek: '#0891b2', carrera: '#dc2626', otro: '#6b7280'
+  };
+
+  let intervalRows = [];
+
+  function initRunningPage() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('run-date').value = today;
+    document.getElementById('running-date').textContent = new Date().toLocaleDateString('es-ES', {weekday:'long', day:'2-digit', month:'long'});
+    document.getElementById('run-type').value = 'rodaje';
+    document.getElementById('run-distance').value = '';
+    document.getElementById('run-duration').value = '';
+    document.getElementById('run-pace').value = '';
+    document.getElementById('run-hr').value = '';
+    document.getElementById('run-calories').value = '';
+    document.getElementById('run-notes').value = '';
+    document.getElementById('interval-rows').innerHTML = '';
+    intervalRows = [];
+    toggleIntervals();
+  }
+
+  function toggleIntervals() {
+    const type = document.getElementById('run-type').value;
+    const card = document.getElementById('run-intervals-card');
+    const title = document.getElementById('intervals-title');
+    if (type === 'series' || type === 'cuestas') {
+      card.style.display = 'block';
+      title.textContent = type === 'cuestas' ? 'Cuestas' : 'Series';
+    } else {
+      card.style.display = 'none';
+    }
+  }
+
+  function calcPace() {
+    const dist = parseFloat(document.getElementById('run-distance').value);
+    const dur = parseFloat(document.getElementById('run-duration').value);
+    if (!dist || !dur) { document.getElementById('run-pace').value = ''; return; }
+    const paceMin = dur / dist;
+    const min = Math.floor(paceMin);
+    const sec = Math.round((paceMin - min) * 60);
+    document.getElementById('run-pace').value = `${min}:${String(sec).padStart(2,'0')} min/km`;
+  }
+
+  function addIntervalRow(distM='', durSec='', restSec='') {
+    const idx = intervalRows.length;
+    const rowId = 'ir-' + Date.now() + Math.random();
+    intervalRows.push(rowId);
+
+    // Calcular ritmo si hay datos
+    let pace = '';
+    if (distM && durSec) {
+      const paceMin = (durSec / 60) / (distM / 1000);
+      const min = Math.floor(paceMin);
+      const sec = Math.round((paceMin - min) * 60);
+      pace = `${min}:${String(sec).padStart(2,'0')}`;
+    }
+
+    const html = `
+      <div id="${rowId}" style="display:grid;grid-template-columns:40px 90px 90px 80px 80px 30px;gap:8px;align-items:center;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:600;color:var(--gray);text-align:center">${idx+1}</span>
+        <input type="number" placeholder="m" value="${distM}" min="0"
+          oninput="updateIntervalPace('${rowId}')" style="font-size:13px;padding:8px;text-align:center">
+        <input type="number" placeholder="seg" value="${durSec}" min="0"
+          oninput="updateIntervalPace('${rowId}')" style="font-size:13px;padding:8px;text-align:center">
+        <input type="text" id="pace-${rowId}" value="${pace}" placeholder="--:--" readonly
+          style="font-size:13px;padding:8px;text-align:center;background:var(--gray-light);color:var(--blue);font-weight:600">
+        <input type="number" placeholder="seg" value="${restSec}" min="0"
+          style="font-size:13px;padding:8px;text-align:center">
+        <button onclick="removeIntervalRow('${rowId}')"
+          style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:14px;color:#dc2626;padding:2px">×</button>
+      </div>`;
+    document.getElementById('interval-rows').insertAdjacentHTML('beforeend', html);
+  }
+
+  function updateIntervalPace(rowId) {
+    const row = document.getElementById(rowId);
+    const inputs = row.querySelectorAll('input');
+    const dist = parseFloat(inputs[0].value);
+    const dur = parseFloat(inputs[1].value);
+    if (!dist || !dur) { document.getElementById('pace-'+rowId).value = ''; return; }
+    const paceMin = (dur / 60) / (dist / 1000);
+    const min = Math.floor(paceMin);
+    const sec = Math.round((paceMin - min) * 60);
+    document.getElementById('pace-'+rowId).value = `${min}:${String(sec).padStart(2,'0')}`;
+  }
+
+  function removeIntervalRow(rowId) {
+    document.getElementById(rowId)?.remove();
+    intervalRows = intervalRows.filter(r => r !== rowId);
+    // Renumerar
+    document.getElementById('interval-rows').querySelectorAll('[id^="ir-"]').forEach((row, i) => {
+      row.querySelector('span').textContent = i + 1;
+    });
+  }
+
+  async function saveRun() {
+    const date = document.getElementById('run-date').value;
+    const type = document.getElementById('run-type').value;
+    if (!date) { showToast('La fecha es obligatoria', 'error'); return; }
+
+    const payload = {
+      user_id: currentUser.id,
+      date,
+      type,
+      distance_km: parseFloat(document.getElementById('run-distance').value) || null,
+      duration_minutes: parseFloat(document.getElementById('run-duration').value) || null,
+      avg_pace: document.getElementById('run-pace').value || null,
+      avg_hr: parseInt(document.getElementById('run-hr').value) || null,
+      calories: parseInt(document.getElementById('run-calories').value) || null,
+      notes: document.getElementById('run-notes').value.trim() || null
+    };
+
+    const { data: run, error } = await db.from('runs').insert(payload).select().single();
+    if (error) { showToast('Error al guardar', 'error'); return; }
+
+    // Guardar series si las hay
+    const rows = document.getElementById('interval-rows').querySelectorAll('[id^="ir-"]');
+    if (rows.length > 0) {
+      const intervals = [];
+      rows.forEach((row, i) => {
+        const inputs = row.querySelectorAll('input[type="number"]');
+        const dist = parseFloat(inputs[0]?.value) || null;
+        const dur = parseFloat(inputs[1]?.value) || null;
+        const rest = parseFloat(inputs[2]?.value) || null;
+        const pace = document.getElementById('pace-' + row.id)?.value || null;
+        if (dist || dur) {
+          intervals.push({ run_id: run.id, order_index: i, distance_m: dist, duration_seconds: dur, pace, rest_seconds: rest });
+        }
+      });
+      if (intervals.length > 0) await db.from('run_intervals').insert(intervals);
+    }
+
+    showToast('¡Carrera guardada!');
+    initRunningPage();
+  }
+
+  async function loadRunHistory() {
+    const { data, error } = await db.from('runs')
+      .select('*, run_intervals(*)')
+      .eq('user_id', currentUser.id)
+      .order('date', { ascending: false });
+    if (error) { showToast('Error al cargar historial', 'error'); return; }
+    renderRunHistory(data || []);
+  }
+
+  function renderRunHistory(list) {
+    const container = document.getElementById('run-history-list');
+    if (list.length === 0) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">🏃</div><p>Sin carreras registradas. ¡A moverse!</p></div>';
+      return;
+    }
+    container.innerHTML = list.map(r => {
+      const date = new Date(r.date + 'T12:00:00').toLocaleDateString('es-ES', {weekday:'short', day:'2-digit', month:'short', year:'numeric'});
+      const typeLabel = RUN_TYPE_LABELS[r.type] || r.type;
+      const typeColor = RUN_TYPE_COLORS[r.type] || '#6b7280';
+      const intervals = (r.run_intervals || []).sort((a,b) => a.order_index - b.order_index);
+      const intervalsHtml = intervals.length ? `
+        <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+          <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:8px">${r.type === 'cuestas' ? 'Cuestas' : 'Series'}</div>
+          ${intervals.map((iv, i) => `
+            <div style="display:flex;gap:16px;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">
+              <span style="color:var(--gray);font-weight:600">${i+1}</span>
+              ${iv.distance_m ? `<span>${iv.distance_m}m</span>` : ''}
+              ${iv.duration_seconds ? `<span>${iv.duration_seconds}s</span>` : ''}
+              ${iv.pace ? `<span style="color:var(--blue);font-weight:600">${iv.pace} min/km</span>` : ''}
+              ${iv.rest_seconds ? `<span style="color:var(--gray)">desc: ${iv.rest_seconds}s</span>` : ''}
+            </div>`).join('')}
+        </div>` : '';
+      return `
+        <div class="card" style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <span style="font-weight:600;font-size:15px">${date}</span>
+                <span style="font-size:11px;font-weight:600;color:white;background:${typeColor};padding:2px 8px;border-radius:10px">${typeLabel}</span>
+              </div>
+              <div style="display:flex;gap:16px;flex-wrap:wrap">
+                ${r.distance_km ? `<span style="font-size:13px"><span style="color:var(--gray)">📍</span> <strong>${r.distance_km} km</strong></span>` : ''}
+                ${r.duration_minutes ? `<span style="font-size:13px"><span style="color:var(--gray)">⏱️</span> <strong>${r.duration_minutes} min</strong></span>` : ''}
+                ${r.avg_pace ? `<span style="font-size:13px"><span style="color:var(--gray)">🏃</span> <strong style="color:var(--blue)">${r.avg_pace}</strong></span>` : ''}
+                ${r.avg_hr ? `<span style="font-size:13px"><span style="color:var(--gray)">❤️</span> <strong>${r.avg_hr} ppm</strong></span>` : ''}
+                ${r.calories ? `<span style="font-size:13px"><span style="color:var(--gray)">🔥</span> <strong>${r.calories} kcal</strong></span>` : ''}
+              </div>
+              ${r.notes ? `<div style="font-size:12px;color:var(--gray);margin-top:4px;font-style:italic">${escapeHtml(r.notes)}</div>` : ''}
+            </div>
+            <button class="btn-danger" style="font-size:11px;padding:4px 8px" onclick="deleteRun('${r.id}')">Eliminar</button>
+          </div>
+          ${intervalsHtml}
+        </div>`;
+    }).join('');
+  }
+
+  async function deleteRun(id) {
+    if (!confirm('¿Eliminar esta carrera?')) return;
+    await db.from('runs').delete().eq('id', id);
+    showToast('Carrera eliminada');
+    loadRunHistory();
+  }
 
   // ── OBJETIVOS NUTRICIONALES ──
 
